@@ -1,0 +1,500 @@
+---
+title: "Ordinal Regression for Clustered Data"
+format: html
+editor: visual
+---
+
+```{r packages}
+rm(list=ls())
+require(fungible)
+require(rms)
+require(Hmisc)
+#require(mnormt)
+require(tidyverse)
+require(data.table)
+require(infer)
+require(MASS)
+require(lme4)
+require(psychometric)
+#require(mvtnorm)
+```
+
+```{r sim}
+# sim1 <- monte(
+#   seed = 123,
+#   nvar = 4,
+#   nclus = 1000,
+#   clus.size = rep(2:5, 250),
+#   eta2 = c(0.619, 0.401, 0.941, 0.929),
+#   cor.list = NULL,
+#   random.cor = FALSE,
+#   skew.list = NULL,
+#   kurt.list = NULL,
+#   secor = NULL,
+#   compactness = NULL,
+#   sortMeans = TRUE
+# )
+# 
+# df <- data.frame(sim1$data)
+```
+
+$y_{ij}=\beta_{0j}+\beta_{1j}X_{1ij}+\beta_{2j}+X_{2ij}+e_{ij}$ $\beta_{0j}=\gamma_{00}+\gamma_{01}+u_{0j}$ $\beta_{1j}=\gamma_{10}+\gamma_{11}+u_{1j}$ $\beta_{2j}=\gamma_{20}+\gamma_{21}+u_{2j}$
+
+```{r dtall, cache=TRUE}
+nclus <- 100000
+init.seed <- as.numeric(Sys.Date())
+
+r11 <- 1.00
+r12 <- 0.15
+r13 <- 0.10
+r21 <- r12
+r22 <- 1.00
+r23 <- 0.05
+r31 <- r13
+r32 <- r23
+r33 <- 1.00
+
+## Function create correlated variables used to induce small correlation between random intercepts & slopes
+## from: https://stats.stackexchange.com/questions/15011/generate-a-random-variable-with-a-defined-correlation-to-an-existing-variables
+## Not sure why, by supplying larger rho value creates smaller correlation.
+
+
+complement <- function(y, rho, x) {
+  if (missing(x)) x <- rnorm(length(y)) # Optional: supply a default if `x` is not given
+  y.perp <- residuals(lm(x ~ y))
+  rho * sd(y.perp) * y + y.perp * sd(y) * sqrt(1 - rho^2)
+}
+
+set.seed(init.seed)
+u0j <- rnorm(nclus, 0, 0.6)
+
+
+set.seed(init.seed+1)
+u1jtemp <- rnorm(nclus, 0, 0.2)
+u1j <- complement(u1jtemp, 0.999, u0j)
+
+set.seed(init.seed+2)
+u2jtemp <- rnorm(nclus, 0, 0.1)
+u2j <- complement(u2jtemp, 0.999, u0j)
+
+## Create within-cluster var-cov matrices for each cluster-- allowing correlation between y and x vars to vary across clusters using values from u0j, u1j, and u2j
+mats <- list()
+mats.func <- for(i in 1:nclus) {
+  mat <- matrix(c(r11, r12+u1j[i], r13+u2j[i],
+           r21+u1j[i], r22, r23,
+           r31+u2j[i], r32, r33), nrow=3)
+  mats[[i]] <- mat
+}
+
+clus.size <- vector()
+clus.size <- replicate(nclus, sample(x=2:6, prob = c(0.25,0.30,0.20,0.15,0.10), size = 1))
+
+
+# set.seed(init.seed+4)
+# dtlist <- list()
+# for (i in 1:nclus) {
+#   m <- data.table(MASS::mvrnorm(n=clus.size[i], 
+#                           mu=c(0+u0j[i], 0, 0),
+#                           Sigma=mats[[i]]))
+#   m$clus <- i
+#  # colnames(m)[1:3] <- c('y','x1','x2') 
+#   dtlist[[i]] <- m
+# }
+# 
+# 
+# dtall <- rbindlist(dtlist, use.names = T)
+# setnames(dtall, old = c('V1','V2','V3'), new = c('y','x1','x2'))
+# 
+# 
+# 
+# dtall[, x2 := factor(ifelse(x2 > quantile(x2, 0.85), 1, 0), levels = 0:1, labels = c('Absent','Present'))]
+# 
+# dtall[, clus := factor(clus)]
+# 
+# dtall[, y.cnt := cut(y, breaks = c(quantile(y, .9), quantile(y, .93), quantile(y, .95), quantile(y, .97), quantile(y, .98), quantile(y, .99)), 
+#                      labels = F, include.lowest = T)]
+# dtall[is.na(y.cnt), y.cnt := 0]
+
+save(dtall, file='dtall.RData')
+load('dtall.RData')
+```
+
+
+```{r lmer1}
+lmer0 <- lmer(y ~ 1 + (1 | clus), data = dtall)
+as.data.frame(VarCorr(lmer0))[1,4]/(as.data.frame(VarCorr(lmer0))[1,4]+as.data.frame(VarCorr(lmer0))[2,4])
+
+lmer1 <- lmer(y ~ x1 + x2 + (1 | clus), data = dtall)
+lmer1fe <- fixef(lmer1)
+
+dtall[, ICC1.lme(dv = y, grp = clus)]
+
+psychometric::ICC1.lme(y, clus, data = dtall)
+psychometric::ICC2.lme(y, clus, data = dtall, weighted = T)
+
+dt1 <- dtall[clus %in% sample(clus, 25), ]
+dt1[, boxplot(y ~ clus)]
+
+boxplot(y ~ clus, data = dt1)
+
+b <- ggplot(dt1, aes(y, clus)) +
+  geom_boxplot()
+b
+```
+<br>
+
+Create a list of $B=1000$ random samples of clusters ($k=9108$) drawn from our pseudo population. The simulation study will run the regression model over these $B=1000$ samples.  
+```{r samps}
+nsim <- 1000
+nclusters <- 9108
+
+# set.seed(init.seed+5)
+# samps <- list()
+# for(i in 1:nsim) {
+#   samps[[i]] <- dtall[clus %in% sample(clus, size = nclusters, replace = T), ]
+# }
+# 
+# save(samps, file='samps.RData')
+load('samps.RData')
+```
+
+
+```{r estlist}
+estlist <- data.frame()
+for(i in 1:nsim){
+  d <- datadist(samps[[i]])
+  options(datadist=d)
+  out <- ols(y ~ x1 + x2, data = samps[[i]], x = TRUE, y = TRUE)
+  ci.temp <- confint(out)[2,]
+  out.rob <- robcov(out, samps[[i]]$clus)
+  ci.rob.temp <- confint(out.rob, method = 'huber')[2,]
+  estlist <- rbind(estlist, ci.temp, ci.rob.temp)
+  colnames(estlist) <- c('lci','uci')
+ # cirob <- confint(robcov(out, samps[[i]]$clus, method = 'huber'))
+}
+
+estlist$true <- lmer1fe[2]
+estlist$cover <- factor(ifelse(estlist$lci <= lmer1fe[2] & estlist$uci >= lmer1fe[2], 1, 0  ), levels = 0:1, labels = c('No','Yes'))
+label(estlist$cover) <- 'Covers True Population Value'
+estlist$ci.type <- factor(rep(c('Regular','Robust'), each = nsim))
+```
+
+
+
+```{r estlist1}
+estlist1 <- data.frame()
+for(i in 1:5){
+ # d <- datadist(samps[[i]])
+#  options(datadist=d)
+  out <- lm(y ~ x1 + x2, data = samps[[i]])
+  ci.temp <- confint(out)[2,]
+  ci.rob.temp <- confint(coeftest(out, vcov = vcovCL, type = "HC1", cluster = ~clus))[2,]
+  estlist1 <- rbind(estlist1, ci.temp, ci.rob.temp)
+  colnames(estlist1) <- c('lci','uci')
+}
+
+estlist1$true <- lmer1fe[2]
+estlist1$cover <- factor(ifelse(estlist1$lci <= lmer1fe[2] & estlist1$uci >= lmer1fe[2], 1, 0  ), levels = 0:1, labels = c('No','Yes'))
+label(estlist1$cover) <- 'Covers True Population Value'
+estlist1$ci.type <- factor(rep(c('Regular','Robust'), each = 5))
+```
+
+
+```{r}
+out1 <- lm(y ~ x1 + x2, data = samps[[1]])
+ci.temp <- confint(out)[2,]
+ci.rob.temp <- confint(coeftest(out1, vcov = vcovCL, type = "HC1", cluster = ~clus))[2,]
+test <- rbind(ci.temp, ci.rob.temp)
+colnames(test) <- c('lci','uci')
+```
+
+
+
+```{r}
+html(summaryM(cover ~ ci.type, data = estlist))
+html(summaryM(cover ~ ci.type, data = estlist1))
+```
+
+
+```{r}
+rm(list=ls())
+
+init.seed <- 202504241
+
+set.seed(init.seed)  # set the seed
+J <- 100000  # number of clusters
+cs <- 3 # number of individuals per cluster
+gam <- c(0, 0.5)  # fixed effects
+G <- matrix(c(0.25, 0,
+              0, 0.125), nrow = 2)  # random effect variances (G-matrix)
+sigma2 <- 1  # within-person variance (lv-1)
+X <- cbind(1, seq_len(cs) - 1)  # for each individual
+X <- X[rep(seq_len(cs), J), ]  # repeat each row cs times
+X <- X
+clusid <- seq_len(J)  # individual id
+clusid <- rep(clusid, each = cs)  # repeat each ID cs times
+# Generate person-level (lv-2) random effects
+uj <- rmnorm(J, mean = rep(0, 2), varcov = G)
+# Generate repeated-measure-level (lv-1) error term
+eij <- rnorm(J * cs, sd = sqrt(sigma2))
+# Compute beta_j's
+betaj <- matrix(gam, nrow = J, ncol = 2, byrow = TRUE) + uj
+# Compute outcome:
+y <- rowSums(X * betaj[clusid, ]) + eij
+# Form a data frame
+sim_dat1 <- data.table(y, x.cat = X[ , 2], clusid)
+# Make ordinal version of y
+sim_dat1$y.o <- cut(sim_dat1$y, 
+                    breaks = c(quantile(sim_dat1$y, 0),
+                               quantile(sim_dat1$y, 0.9),
+                               quantile(sim_dat1$y, 0.925),
+                               quantile(sim_dat1$y, 0.95),
+                               quantile(sim_dat1$y, 0.975),
+                               quantile(sim_dat1$y, 1)),
+                    labels=c('Never','Once','Twice','Three Times','Four Times'),
+                    ordered_result = T)
+
+# Make a continuous predictor
+getBiCop <- function(n, rho, mar.fun=rnorm, x = NULL, ...) {
+     if (!is.null(x)) {X1 <- x} else {X1 <- mar.fun(n, ...)}
+     if (!is.null(x) & length(x) != n) warning("Variable x does not have the same length as n!")
+
+     C <- matrix(rho, nrow = 2, ncol = 2)
+     diag(C) <- 1
+
+     C <- chol(C)
+
+     X2 <- mar.fun(n)
+     X <- cbind(X1,X2)
+
+     # induce correlation (does not change X1)
+     df <- X %*% C
+
+     ## if desired: check results
+     #all.equal(X1,X[,1])
+     #cor(X)
+
+     return(df)
+}
+sim_dat1$x.cont <- getBiCop(n=dim(sim_dat1)[1], rho=.2, x = sim_dat1$y)[,2]
+```
+
+```{r}
+lrm.rep <- function(data, n) {
+  samples <- sim_dat1[sample(nrow(data), n), ]
+  fit <- lrm(y.o ~ factor(x, levels=0:2, labels=c('Not at all','Somewhat','A lot')), data=data)
+  return(summary(fit)[1,c(4:7)])
+}
+
+outlist <- list()
+
+
+
+```
+
+USE THIS
+
+```{r}
+
+# Load necessary library
+library(MASS)
+
+# Set parameters
+n_clusters <- 100000
+icc <- 0.5
+mean_outcome <- 1
+sd_outcome <- 0.15
+cor_pred1 <- 0.5
+cor_pred2 <- 0.25
+
+# Function to simulate data
+simulate_data <- function(n_clusters, icc, mean_outcome, sd_outcome, cor_pred1, cor_pred2) {
+  # Number of observations per cluster
+  n_obs_per_cluster <- 3
+  
+  # Generate random effects for clusters
+  cluster_effects <- rnorm(n_clusters, mean = 0, sd = sqrt(icc * sd_outcome^2))
+  
+  # Generate outcome variable
+  outcome <- rnorm(n_clusters * n_obs_per_cluster, mean = mean_outcome, sd = sqrt((1 - icc) * sd_outcome^2)) + rep(cluster_effects, each = n_obs_per_cluster)
+  
+  # Generate predictors
+  predictor1 <- outcome * cor_pred1 + rnorm(n_clusters * n_obs_per_cluster, mean = 0, sd = sqrt(1 - cor_pred1^2))
+  predictor2 <- outcome * cor_pred2 + rnorm(n_clusters * n_obs_per_cluster, mean = 0, sd = sqrt(1 - cor_pred2^2))
+  
+  # Create data frame
+  data <- data.frame(cluster = rep(1:n_clusters, each = n_obs_per_cluster),
+                     outcome = outcome,
+                     predictor1 = predictor1,
+                     predictor2 = predictor2)
+}
+
+# Simulate the data
+simdat <- setDT(simulate_data(n_clusters, icc, mean_outcome, sd_outcome, cor_pred1, cor_pred2))
+
+setnames(simdat, c('cluster','outcome','predictor1','predictor2'), c('clus','y','x1','x2'))
+
+# Display the first few rows of the simulated data
+head(simdat)
+
+
+```
+
+```{r}
+# Load necessary library
+library(data.table)
+
+# Sample data frame
+df <- data.table(
+  cluster = rep(1:5, each = 10),
+  value = rnorm(50)
+)
+
+# Function to sample clusters and store results in a list
+sample_clusters_to_list <- function(data, n_clusters, n_samples, n_repeats) {
+  results_list <- vector("list", n_repeats)
+  
+  for (i in 1:n_repeats) {
+    sampled_clusters <- data[, .SD[sample(.N, n_samples, replace = TRUE)], by = cluster]
+    results_list[[i]] <- sampled_clusters
+  }
+  
+  return(results_list)
+}
+
+# Example usage: sample 3 clusters, 5 samples each, repeated 10 times
+set.seed(123)
+sampled_list <- sample_clusters_to_list(df, n_clusters = 3, n_samples = 5, n_repeats = 10)
+
+# Print the first sampled data frame in the list
+print(sampled_list[[1]])
+
+```
+
+```{r}
+nrep <- 1000
+nsample <- 9108
+
+
+
+# Sample data frame
+df <- data.table(
+  cluster = rep(1:5, each = 10),
+  value = rnorm(50)
+)
+
+# Function to sample clusters
+sample_clusters <- function(data, n_clusters, n_samples) {
+  sampled_clusters <- sim_dat1[, .SD[sample(.N, n_samples, replace = TRUE)], by = cluster]
+  return(sampled_clusters)
+}
+
+# Example usage: sample 3 clusters, 5 samples each
+set.seed(123)
+sampled_df <- sample_clusters(df, n_clusters = 3, n_samples = 5)
+print(sampled_df)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+set.seed(202505021)
+rsamp <- list()
+for(i in 1:5) {
+  samp <- as.numeric(sample(unique(sim_dat1$clusid), size=nsample))
+  rsamp[[i]] <- samp
+}
+
+
+for(i in 1:5){
+  lrm.fit[i] <- lrm(y.o ~ x.cat + x.cont, data=sim_dat1, x=TRUE, y = TRUE, subset=sim_dat1$clusid %in% rsamp[i])  
+}
+
+
+int <- as.numeric(rsamp[1])
+
+lrm1 <- lrm(y.o ~ x.cont + x.cat, data=sim_dat1, x=TRUE, y = TRUE, subset=sim_dat1$clusid %in% as.numeric(rsamp[1]))
+
+
+set.seed( init.seed + 1)
+id.samples <- rep_slice_sample( sim_dat1, 
+                                n = nsample,
+                                replace = F,
+                                reps = nrep )
+df.samples <- data.frame(id.samples)
+df.samples <- df.samples[order(df.samples$replicate, df.samples$clusid),]
+dd <- datadist(id.samples)
+options(datadist=dd)
+
+
+
+
+
+
+
+
+lrm1cov <- robcov(lrm1, cluster = clusid)
+
+ci <- confint(polr(y.o ~ factor(x), data=id.samples[id.samples$replicate==1,]))
+est <- coef(polr(y.o ~ factor(x), data=id.samples[id.samples$replicate==1,]))
+c(est,ci)
+
+estlist <- list()
+for ( i in 1:5 ) {
+   ordfit <- polr(y.o ~ factor(x), data=id.samples[id.samples$replicate==i,])
+   est <- c(coef(ordfit), confint(ordfit))
+   estlist[[i]] <- est
+ }
+save( dtlist, file = 'dtlist.RData' )
+
+dd <- datadist(sim_dat1)
+options(datadist='dd')
+
+
+```
+
+```{r}
+
+simoutlist <- list()
+for(i in 1:)
+
+
+polrsim1 <- function(data, evaltime ) {
+  outunadj <- lm( y ~ armf, data=data[ data$time == evaltime, ] ) 
+  ciunadj <- data.frame( est = coef( outunadj )[2], lci = confint( outunadj )[2,1], uci = confint( outunadj )[2,2],
+                         width = confint( outunadj )[2,2] - confint( outunadj )[2,1] ) 
+  # outadj <- lm( y ~ armf + I(year - mean(year)), data=data[ data$time == evaltime, ] )
+  # ciadj <- data.frame( est = coef( outadj )[2], lci = confint( outadj )[2,1], uci = confint( outadj )[2,2],
+  #                        width = confint( outadj )[2,2] - confint( outadj )[2,1] )
+  outunadj.miss <- lm( ymiss ~ armf, data=data[ data$time == evaltime, ] ) 
+  ciunadj.miss <- data.frame( est = coef( outunadj.miss )[2], lci = confint( outunadj.miss )[2,1], uci = confint( outunadj.miss )[2,2],
+                         width = confint( outunadj.miss )[2,2] - confint( outunadj.miss )[2,1] ) 
+  # outadj.miss <- lm( ymiss ~ armf + I(year - mean(year)), data=data[ data$time == evaltime, ] )
+  # ciadj.miss <- data.frame( est = coef( outadj.miss )[2], lci = confint( outadj.miss )[2,1], uci = confint( outadj.miss )[2,2],
+  #                        width = confint( outadj.miss )[2,2] - confint( outadj.miss )[2,1] )
+  estimates <- rbind( ciunadj, 
+                      #ciadj, 
+                      ciunadj.miss
+                      #, ciadj.miss 
+                      )
+  estimates$model <- factor( rep( 0:1, length(estimates$est)/2 ), levels = 0:1, labels = c('Complete Data','Missing') )
+  estimates
+}
+```
+
+```{r}
+m <- polr(apply ~ pared + public + gpa, data = dat, Hess=TRUE)
+```

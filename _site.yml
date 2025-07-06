@@ -1,0 +1,9 @@
+name: "clusteredOrdinal"
+navbar:
+  title: "Robust Standard Errors for Analysis of Clustered Data"
+  left:
+    - text: "Analyses"
+      href: clustord.html
+ #   - text: "Analyses"
+#      href: HEROS04_Analyses.html
+output_dir: docs

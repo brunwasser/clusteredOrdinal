@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Steve Brunwasser" />
+
+<meta name="date" content="2025-06-30" />
+
+<title>Robust Standard Errors for Clustered Data</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  background-color: #f8f8f8; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ef2929; } /* Alert */
+code span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #204a87; } /* Attribute */
+code span.bn { color: #0000cf; } /* BaseN */
+code span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4e9a06; } /* Char */
+code span.cn { color: #8f5902; } /* Constant */
+code span.co { color: #8f5902; font-style: italic; } /* Comment */
+code span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
+code span.dt { color: #204a87; } /* DataType */
+code span.dv { color: #0000cf; } /* DecVal */
+code span.er { color: #a40000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #0000cf; } /* Float */
+code span.fu { color: #204a87; font-weight: bold; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #204a87; font-weight: bold; } /* Keyword */
+code span.op { color: #ce5c00; font-weight: bold; } /* Operator */
+code span.ot { color: #8f5902; } /* Other */
+code span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
+code span.sc { color: #ce5c00; font-weight: bold; } /* SpecialChar */
+code span.ss { color: #4e9a06; } /* SpecialString */
+code span.st { color: #4e9a06; } /* String */
+code span.va { color: #000000; } /* Variable */
+code span.vs { color: #4e9a06; } /* VerbatimString */
+code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
+
+.sourceCode .row {
+  width: 100%;
+}
+.sourceCode {
+  overflow-x: auto;
+}
+.code-folding-btn {
+  margin-right: -30px;
+}
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Robust Standard Errors for Analysis of Clustered Data</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="clustord.html">Analyses</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Robust Standard Errors for Clustered
+Data</h1>
+<h4 class="author">Steve Brunwasser</h4>
+<h4 class="date">2025-06-30</h4>
+
+</div>
+
+
+<div id="workspace-prep" class="section level1">
+<h1>Workspace Prep</h1>
+<p>Clear the workspace and then load packages we may need.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>())</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">require</span>(fungible)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">require</span>(rms)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">require</span>(Hmisc)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">require</span>(ggplot2)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">require</span>(data.table)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">require</span>(infer)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">require</span>(MASS)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">require</span>(lme4)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">require</span>(psychometric)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">require</span>(ordinal)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">require</span>(lmtest)</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="fu">require</span>(sandwich)</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="fu">require</span>(VGAM)</span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="fu">require</span>(estimatr)</span></code></pre></div>
+<p><br></p>
+</div>
+<div id="simulation-study" class="section level1">
+<h1>Simulation Study</h1>
+<p>The purpose of this study is to evaluate the coverage rates for 95%
+confidence intervals (two-tailed <span
+class="math inline">\(\alpha=.05\)</span>) when fitting linear
+regressions with robust “sandwich” estimators to clustered data where
+observations within clusters are non-independent but observations across
+clusters are independent.</p>
+<div id="data-generating-mechanism-equation" class="section level2">
+<h2>Data-Generating Mechanism Equation</h2>
+<p>The simulated data set is developed based on a two-level
+mixed-effects model (equations below). The goal is to create a data set
+that roughly approximates LH’s data.</p>
+<p><span class="math display">\[
+y_{ij}=\beta_{0j}+\beta_{1j}X_{1ij}+e_{ij}
+\]</span> <span class="math display">\[
+\beta_{0j}=\gamma_{00}+\gamma_{01}w+u_{0j}
+\]</span> <span class="math display">\[
+\beta_{1j}=\gamma_{10}+u_{1j}
+\]</span></p>
+<p><span class="math display">\[
+\epsilon_{ij} \sim N(0,\sigma^2)
+\]</span> <span class="math display">\[
+\begin{bmatrix}
+u_{0j} \cr
+u_{1j}\cr
+\end{bmatrix}
+\sim ~ N(\begin{bmatrix}
+0 \cr
+0 \cr
+\end{bmatrix}
+,
+\begin{bmatrix}
+\tau_{00} &amp;  \cr
+\tau_{10} &amp; \tau_{11}\cr
+\end{bmatrix})
+\]</span></p>
+<p><br></p>
+</div>
+<div id="simulate-the-population-data" class="section level2">
+<h2>Simulate the Population Data</h2>
+<ul>
+<li><strong>y</strong>: Continuous, Gaussian-distributed predictor</li>
+<li><strong>x</strong>: Continuous predictor varying within and between
+clusters (level-1 predictor)</li>
+<li><strong>w</strong>: Continuous predictor constant within clusters
+(level-2 predictor) (<span
+class="math inline">\(r_{x_1,x_2}=.10\)</span>)</li>
+<li><strong>clusid</strong>: Identifies unique clusters which vary in
+size between 2 and 8</li>
+</ul>
+<p><br></p>
+<p>Create cluster ID variable with number of observations per cluster
+ranging from 2-8 with ~80% of clusters having 2-4 observations</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>cluster <span class="ot">&lt;-</span> <span class="dv">100000</span></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>id <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span>cluster, <span class="fu">sample</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">8</span>, cluster, <span class="at">prob =</span> <span class="fu">c</span>(.<span class="dv">20</span>, .<span class="dv">40</span>, .<span class="dv">20</span>, .<span class="dv">10</span>, .<span class="dv">05</span>, .<span class="dv">03</span>, .<span class="dv">02</span>), <span class="at">replace =</span> <span class="cn">TRUE</span>)))</span></code></pre></div>
+<p><br></p>
+<p>Create the x matrix consistent of two “standardized” predictors
+(<span class="math inline">\(M=0, SD=1\)</span>) allowing the two
+predictors to be correlated (<span
+class="math inline">\(r=.10\)</span>). Below we can see the first 6 rows
+of the x matrix.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>sig.x <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="fl">1.0</span>, <span class="fl">0.1</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>                <span class="fl">0.1</span>, <span class="fl">1.0</span>),</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>              <span class="at">nrow=</span><span class="dv">2</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>mn.x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">456</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>xmat <span class="ot">&lt;-</span> <span class="fu">mvrnorm</span>(<span class="at">n=</span><span class="fu">length</span>(id),</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>              <span class="at">mu=</span>mn.x,</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>              <span class="at">Sigma=</span>sig.x)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="fu">head</span>(xmat)</span></code></pre></div>
+<pre><code>##            [,1]        [,2]
+## [1,] -0.5735665 -1.41919775
+## [2,]  0.5966311  0.32561113
+## [3,]  1.1464543  0.04143476
+## [4,]  0.2353881 -2.29544845
+## [5,]  0.7983590 -1.85792146
+## [6,] -0.3013423 -0.17931796</code></pre>
+<p><br></p>
+<p>Transform the x matrix into a data.table and make the second
+predictor (<em>w</em>) into a level-2 predictor that is constant within
+clusters by replacing individual values with the cluster mean.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">clusid=</span>id, <span class="at">x=</span>xmat[,<span class="dv">1</span>], <span class="at">w=</span>xmat[,<span class="dv">2</span>])</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>x2mn <span class="ot">&lt;-</span> dt[, w <span class="sc">:=</span> <span class="fu">mean</span>(w), by <span class="ot">=</span> clusid]</span></code></pre></div>
+<p><br></p>
+<p>Simulate the variance parameters.</p>
+<ul>
+<li><em>e</em>: Within-cluster error – <span class="math inline">\(M=0,
+SD=0.975\)</span></li>
+<li><em>u00</em>: Random intercept effect – <span
+class="math inline">\(M=0, SD=0.75\)</span></li>
+<li><em>u01</em>: Random slope for x (level-1) predictor effect – <span
+class="math inline">\(M=0, SD=0.35\)</span></li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">789</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>dt[, e <span class="sc">:=</span> <span class="fu">rnorm</span>(<span class="fu">length</span>(id), <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span>.<span class="dv">975</span>)]</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>dt[, int <span class="sc">:=</span> <span class="dv">0</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">101112</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>u00 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(cluster, <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span>.<span class="dv">75</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">131415</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>u01 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(cluster, <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span>.<span class="dv">35</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>reff <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">clusid =</span> <span class="fu">factor</span>(<span class="fu">unique</span>(id)), u00, u01)</span></code></pre></div>
+<p><br></p>
+<ul>
+<li>Set the fixed-effects parameters</li>
+<li>Gather all simulated processes into a data.table (<em>dt</em>)</li>
+<li>Create continuous <em>y</em> outcome variable based on fixed &amp;
+random effects and simulated predictor values</li>
+<li>Look at the first 20 rows of <em>dt</em> – can see that clusters
+have different numbers of observations and which variables vary within
+clusters (level-1; e.g., <em>x</em>) and which are constant within
+clusters (level-2; e.g., <em>w</em>)</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">merge</span>(dt, reff, <span class="at">by =</span> <span class="st">&#39;clusid&#39;</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>dt[, b1 <span class="sc">:=</span> <span class="fl">0.2</span>]</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>dt[, b2 <span class="sc">:=</span> <span class="fl">0.15</span>]</span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>dt[, y <span class="sc">:=</span> (int<span class="sc">+</span>u00) <span class="sc">+</span> (b1<span class="sc">*</span>x<span class="sc">+</span>u01) <span class="sc">+</span> (b2<span class="sc">*</span>w) <span class="sc">+</span> e ]</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>dt[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>]</span></code></pre></div>
+<pre><code>## Key: &lt;clusid&gt;
+##     clusid           x          w           e   int        u00        u01    b1    b2            y
+##     &lt;fctr&gt;       &lt;num&gt;      &lt;num&gt;       &lt;num&gt; &lt;num&gt;      &lt;num&gt;      &lt;num&gt; &lt;num&gt; &lt;num&gt;        &lt;num&gt;
+##  1:      1 -0.57356654 -0.3507173  0.51099429     0 -0.5691497 -0.1290604   0.2  0.15 -0.354536692
+##  2:      1  0.59663105 -0.3507173 -2.20424869     0 -0.5691497 -0.1290604   0.2  0.15 -2.835740154
+##  3:      1  1.14645434 -0.3507173 -0.01918773     0 -0.5691497 -0.1290604   0.2  0.15 -0.540714535
+##  4:      2  0.23538809 -2.0766850  0.17856140     0  1.0151986  0.3698953   0.2  0.15  1.299230158
+##  5:      2  0.79835901 -2.0766850 -0.35231769     0  1.0151986  0.3698953   0.2  0.15  0.880945251
+##  6:      3 -0.30134226  0.7952887 -0.47237189     0 -0.1508028  0.3927092   0.2  0.15 -0.171440638
+##  7:      3  0.04424577  0.7952887 -0.64965512     0 -0.1508028  0.3927092   0.2  0.15 -0.279606263
+##  8:      3 -0.94178065  0.7952887 -0.17010755     0 -0.1508028  0.3927092   0.2  0.15  0.002736029
+##  9:      3  0.42721876  0.7952887 -0.98568568     0 -0.1508028  0.3927092   0.2  0.15 -0.539042218
+## 10:      4  1.25698276  0.5782601  0.72120366     0 -0.3301558 -0.3453259   0.2  0.15  0.383857443
+## 11:      4 -1.07276544  0.5782601 -0.39223890     0 -0.3301558 -0.3453259   0.2  0.15 -1.195534750
+## 12:      4  1.37587995  0.5782601 -0.97771082     0 -0.3301558 -0.3453259   0.2  0.15 -1.291277590
+## 13:      4 -0.17322520  0.5782601 -0.17327623     0 -0.3301558 -0.3453259   0.2  0.15 -0.796664030
+## 14:      4  1.07806816  0.5782601 -0.47570207     0 -0.3301558 -0.3453259   0.2  0.15 -0.848831206
+## 15:      5 -1.18769440  1.0820545  0.90470971     0  0.9730025 -0.4427058   0.2  0.15  1.359775641
+## 16:      5  1.76136364  1.0820545 -0.75506459     0  0.9730025 -0.4427058   0.2  0.15  0.289812949
+## 17:      5 -0.57422632  1.0820545  0.41229935     0  0.9730025 -0.4427058   0.2  0.15  0.990058898
+## 18:      5  0.85133481  1.0820545 -0.59178930     0  0.9730025 -0.4427058   0.2  0.15  0.271082472
+## 19:      5  1.30979188  1.0820545  0.20414060     0  0.9730025 -0.4427058   0.2  0.15  1.158703794
+## 20:      5  0.91234981  1.0820545 -0.75790376     0  0.9730025 -0.4427058   0.2  0.15  0.117171017
+##     clusid           x          w           e   int        u00        u01    b1    b2            y</code></pre>
+<p><br></p>
+<p>Make count and ordinal version of the <em>y</em> outcome variable
+reflecting the low rate of outcome occurrence in LH’s data. Summarize
+the variables to be used in analyses.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Create a count outcome mimicking distribution in LH&#39;s data</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>dt[, y.cnt <span class="sc">:=</span> <span class="fu">cut</span>(y,</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>                  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">quantile</span>(y, <span class="dv">0</span>),</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.9</span>),</span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.925</span>),</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.95</span>),</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.975</span>),</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="dv">1</span>)),</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>                    <span class="at">labels=</span>F)]</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># Create 3-level ordinal outcome</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>dt[, y.ord <span class="sc">:=</span> <span class="fu">ordered</span>(<span class="fu">cut</span>(y,</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>                  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">quantile</span>(y, <span class="dv">0</span>),</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.8</span>),</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, .<span class="dv">9</span>),</span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, .<span class="dv">975</span>)),</span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>                    <span class="at">labels=</span>F), <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">labels=</span><span class="fu">c</span>(<span class="st">&#39;Low&#39;</span>,<span class="st">&#39;Medium&#39;</span>,<span class="st">&#39;High&#39;</span>))]</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">upData</span>(dt, <span class="at">labels=</span><span class="fu">c</span>(<span class="at">x=</span><span class="st">&#39;Continuous Within-Cluster Varying Predictor&#39;</span>,</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>                    <span class="at">w=</span><span class="st">&#39;Continuous Cluster-Level Predictor&#39;</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>                    <span class="at">y=</span><span class="st">&#39;Continous Outcome&#39;</span>,</span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>                    <span class="at">y.cnt=</span><span class="st">&#39;Count Version of Outcome&#39;</span>,</span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>                    <span class="at">y.ord=</span><span class="st">&#39;3-Level Ordinal Version of Outcome&#39;</span>))</span></code></pre></div>
+<pre><code>## Input object size:    36382040 bytes;     12 variables    356875 observations
+## New object size: 34957096 bytes; 12 variables    356875 observations</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">html</span>(<span class="fu">describe</span>(dt[,<span class="fu">c</span>(<span class="st">&#39;clusid&#39;</span>,<span class="st">&#39;x&#39;</span>,<span class="st">&#39;w&#39;</span>,<span class="st">&#39;y&#39;</span>,<span class="st">&#39;y.ord&#39;</span>,<span class="st">&#39;y.cnt&#39;</span>)]))</span></code></pre></div>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style>
+.earrows {color:silver;font-size:11px;}
+
+fcap {
+ font-family: Verdana;
+ font-size: 12px;
+ color: MidnightBlue
+ }
+
+smg {
+ font-family: Verdana;
+ font-size: 10px;
+ color: &#808080;
+}
+
+hr.thinhr { margin-top: 0.15em; margin-bottom: 0.15em; }
+
+span.xscript {
+position: relative;
+}
+span.xscript sub {
+position: absolute;
+left: 0.1em;
+bottom: -1ex;
+}
+</style>
+
+<title>dt[, c("clusid", "x", "w", "y", "y.ord", "y.cnt")] Descriptives</title>
+<font color="MidnightBlue"><div align=center><span style="font-weight:bold">dt[, c("clusid", "x", "w", "y", "y.ord", "y.cnt")] <br><br> 6  Variables   356875  Observations</span></div></font>
+<hr class="thinhr">
+<span style="font-weight:bold">clusid</span>
+<style>
+ .hmisctable241384 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable241384 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable241384 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable241384">
+ <tr><th>n</th><th>missing</th><th>distinct</th></tr>
+ <tr><td>356875</td><td>0</td><td>1e+05</td></tr>
+ </table>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font> : 1      2      3      4      5      ,  <font color="MidnightBlue">highest</font>: 99996  99997  99998  99999  100000</span>
+<hr class="thinhr">
+<span style="font-weight:bold">x</span>: Continuous Within-Cluster Varying Predictor<div style='float: right; text-align: right;'><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAAACVBMVEUAAADMzMz////1iUV5AAAAb0lEQVQ4jb3T0QqAMAxD0Wz//9FSBEGGs82thj2acBCqwaNbGgZjc+JoCd+cdGNF9cjYwoOqQUb6GxWGgfqeBWn2+byrIn/fY04FfplTTKMArd4qqkxZrWOYTFv6e0BycHExGrpOLHlnHyQc5wvNAZlRCb0RKZIZAAAAAElFTkSuQmCC" alt="image" /></div>
+<pre style="font-size:85%;">
+         n   missing  distinct      Info      Mean   pMedian       Gmd       .05 
+    356875         0    356875         1  0.001759  0.001905     1.131 -1.649481 
+       .10       .25       .50       .75       .90       .95 
+ -1.283267 -0.674684  0.001626  0.677430  1.287581  1.649569  </pre>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font> : -4.81563 -4.67164 -4.32624 -4.28466 -4.26182 ,  <font color="MidnightBlue">highest</font>: 4.30253  4.39012  4.51486  4.7087   4.86529 </span>
+<hr class="thinhr">
+<span style="font-weight:bold">w</span>: Continuous Cluster-Level Predictor<div style='float: right; text-align: right;'><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAAACVBMVEUAAADMzMz////1iUV5AAAAcklEQVQ4jc3T4QqAIBAD4Nn7P3RInRBaetsCR+Cvm5/BoehBi6EsOg81eESui1Z1vs8GroHKBFNKxiqPTKh4Zxlg9Ap9qQybyb5swpL/GTW9gFJh+eFFlEhLTqZQCi0xRph4XF0c1A+zDfsrce8FKfdxAlsBCkC0h0rRAAAAAElFTkSuQmCC" alt="image" /></div>
+<pre style="font-size:85%;">
+         n   missing  distinct      Info      Mean   pMedian       Gmd       .05 
+    356875         0     1e+05         1 0.0009213  0.001166    0.5948 -0.871045 
+       .10       .25       .50       .75       .90       .95 
+ -0.666636 -0.344071  0.001945  0.345852  0.668221  0.867984  </pre>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font> : -2.77226 -2.6704  -2.57786 -2.56818 -2.5099  ,  <font color="MidnightBlue">highest</font>: 2.52237  2.5772   2.58769  2.75934  3.03463 </span>
+<hr class="thinhr">
+<span style="font-weight:bold">y</span>: Continous Outcome<div style='float: right; text-align: right;'><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAJcAAAANCAMAAACTvAxuAAAACVBMVEUAAADMzMz////1iUV5AAAAZklEQVQ4jcXTwQ4AEAwD0PH/H21zE8HWDnVwYXlZUikpkTEJA2tCZA498gYqQca6VipWxrl2Ko7GuI4qAoZXx6PqedlHNwpdGuSKqSAZ8APMVReKCtv8T0lSEGdtET1aL7v/xwxqauBTCXeLnmEiAAAAAElFTkSuQmCC" alt="image" /></div>
+<pre style="font-size:85%;">
+          n    missing   distinct       Info       Mean    pMedian        Gmd 
+     356875          0     356875          1   0.001052   0.001068      1.465 
+        .05        .10        .25        .50        .75        .90        .95 
+ -2.132e+00 -1.663e+00 -8.725e-01  1.264e-05  8.783e-01  1.662e+00  2.134e+00  </pre>
+
+<span style="font-size: 85%;"><font color="MidnightBlue">lowest</font> : -5.97798 -5.86575 -5.63449 -5.52584 -5.52245 ,  <font color="MidnightBlue">highest</font>: 5.46089  5.4723   5.52201  5.55915  5.63046 </span>
+<hr class="thinhr">
+<span style="font-weight:bold">y.ord</span>: 3-Level Ordinal Version of Outcome<div style='float: right; text-align: right;'><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAAAoAAAANCAMAAACn6Q83AAAACVBMVEUAAADMzMz////1iUV5AAAAH0lEQVQImWNgYIQBBgYmGCCNSbYJYC4DA8gEsCkMDAA5cADEv6lXIAAAAABJRU5ErkJggg==" alt="image" /></div>
+<style>
+ .hmisctable466725 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable466725 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable466725 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable466725">
+ <tr><th>n</th><th>missing</th><th>distinct</th></tr>
+ <tr><td>347952</td><td>8923</td><td>3</td></tr>
+ </table>
+
+<pre style="font-size:85%;">
+ Value         Low Medium   High
+ Frequency  285499  35687  26766
+ Proportion  0.821  0.103  0.077 </pre>
+
+<hr class="thinhr">
+<span style="font-weight:bold">y.cnt</span>: Count Version of Outcome<div style='float: right; text-align: right;'><img src="data:image/png;base64,
+iVBORw0KGgoAAAANSUhEUgAAABAAAAANCAMAAACXZR4WAAAACVBMVEUAAADMzMz////1iUV5AAAAGklEQVQImWNgYEQFDAxMqIA6AnSzhQGMIBgAlQABVnVqL1oAAAAASUVORK5CYII=" alt="image" /></div>
+<style>
+ .hmisctable870431 {
+ border: none;
+ font-size: 85%;
+ }
+ .hmisctable870431 td {
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ }
+ .hmisctable870431 th {
+ color: MidnightBlue;
+ text-align: center;
+ padding: 0 1ex 0 1ex;
+ font-weight: normal;
+ }
+ </style>
+ <table data-quarto-disable-processing="true" class="hmisctable870431">
+ <tr><th>n</th><th>missing</th><th>distinct</th><th>Info</th><th>Mean</th><th>pMedian</th><th>Gmd</th></tr>
+ <tr><td>356874</td><td>1</td><td>5</td><td>0.271</td><td>1.25</td><td>1</td><td>0.4625</td></tr>
+ </table>
+
+<pre style="font-size:85%;">
+ Value           1      2      3      4      5
+ Frequency  321186   8922   8922   8922   8922
+ Proportion  0.900  0.025  0.025  0.025  0.025 </pre>
+
+
+For the frequency table, variable is rounded to the nearest 0
+<hr class="thinhr">
+<p><br></p>
+<p>Look at between- &amp; within-cluster variability in <span
+class="math inline">\(y\)</span> in a random sample of <span
+class="math inline">\(k=15\)</span> clusters in the population data</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>boxplot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dt[<span class="fu">sample</span>(clusid, <span class="dv">15</span>)], <span class="fu">aes</span>(y, clusid)) <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y=</span><span class="st">&#39;15 Randomly Selected Clusters&#39;</span></span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>       ,<span class="at">x=</span><span class="st">&#39;Continuous y Levels&#39;</span></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>       )</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>boxplot</span></code></pre></div>
+<p><img src="clustord_files/figure-html/boxplot-1.png" width="672" /></p>
+<p><br></p>
+<p>Get population level parameters for effects of <em>x</em> and
+<em>w</em></p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>dd <span class="ot">&lt;-</span> <span class="fu">datadist</span>(dt)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="fu">options</span>(<span class="at">datadist=</span>dd)</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#pop.lin &lt;- ols(y ~ x + w, data = dt)</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#save(pop.lin, file=&#39;pop.lin&#39;)</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;pop.lin&#39;</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>b1lin <span class="ot">&lt;-</span> <span class="fu">coef</span>(pop.lin)[<span class="dv">2</span>]</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>b1lin</span></code></pre></div>
+<pre><code>##         x 
+## 0.2005706</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>b2lin <span class="ot">&lt;-</span> <span class="fu">coef</span>(pop.lin)[<span class="dv">3</span>]</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>b2lin</span></code></pre></div>
+<pre><code>##         w 
+## 0.1643755</code></pre>
+<p><br></p>
+</div>
+<div id="sample-clusters" class="section level2">
+<h2>Sample Clusters</h2>
+<p>Create a list of <span class="math inline">\(s=1,000\)</span>
+data.tables each sampling <span class="math inline">\(n=9,108\)</span>
+clusters from the populations data.table. We will then run regression
+models across all 1,000 samples.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>nsamp <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>nclus <span class="ot">&lt;-</span> <span class="dv">9108</span></span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a> </span>
+<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a> clussampler <span class="ot">&lt;-</span> <span class="cf">function</span>(data, clusid, nclus, nsamp){</span>
+<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>   dtsamp <span class="ot">&lt;-</span> data[<span class="fu">sample</span>(<span class="fu">unique</span>(clusid), nclus), .SD ]</span>
+<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a> }</span>
+<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co"># set.seed(131416)</span></span>
+<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="co"># samplelist &lt;- list()</span></span>
+<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a><span class="co">#  for(i in 1:nsamp){</span></span>
+<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="co">#    sampled &lt;- clussampler(dt, clusid, nclus, nsamp)</span></span>
+<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="co">#    samplelist[[i]] &lt;- sampled</span></span>
+<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co">#  }</span></span>
+<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co"># save(samplelist, file=&#39;samplelist.RData&#39;)</span></span>
+<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;samplelist.RData&#39;</span>)</span></code></pre></div>
+<p><br></p>
+</div>
+<div id="run-linear-models" class="section level2">
+<h2>Run Linear Models</h2>
+<ul>
+<li>Use <em>for()</em> loop to run simple linear regression model not
+accounting for dependence due to clustering across the 1,000 samples of
+n=9,108 clusters created in the prior step</li>
+<li>Repeat this process using the <em>lm_robust()</em> function from the
+<em>estimatr</em> package to obtain robust standard errors – used
+lm_robust() because it allows for highly concise code for robust
+SEs</li>
+<li>Look at the converage rate for 95% CIs using standard regression and
+robust regression</li>
+<li>Using standard regression, coverage rate is poor for the level-2
+predictor (<em>w</em>) effect but fine for the level-1 predictor
+(<em>x</em>) effect</li>
+<li>Using robust regression, coverage rate is good for all parameter
+estimates</li>
+</ul>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">131417</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>linout <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nsamp){</span>
+<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x <span class="sc">+</span> w, <span class="at">data =</span> samplelist[[i]])</span>
+<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>  outdt <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">confint</span>(out))</span>
+<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>  linout[[i]] <span class="ot">&lt;-</span> outdt</span>
+<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>}</span>
+<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a>linest <span class="ot">=</span> <span class="fu">do.call</span>(rbind, linout)</span>
+<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a>linest<span class="sc">$</span>par <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;int&#39;</span>,<span class="st">&#39;b1&#39;</span>,<span class="st">&#39;b2&#39;</span>), nsamp))</span>
+<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="fu">setnames</span>(linest, <span class="at">old =</span> <span class="fu">names</span>(linest), <span class="at">new =</span> <span class="fu">c</span>(<span class="st">&#39;lci&#39;</span>,<span class="st">&#39;uci&#39;</span>,<span class="st">&#39;par&#39;</span>))</span>
+<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a>linest[, b1 <span class="sc">:=</span> b1lin]</span>
+<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>linest[, b2 <span class="sc">:=</span> b2lin]</span>
+<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a>linest[par<span class="sc">==</span><span class="st">&#39;b1&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(b1, lci, uci, <span class="at">incbounds =</span> T))]</span>
+<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a>linest[par<span class="sc">==</span><span class="st">&#39;b2&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(b2, lci, uci, <span class="at">incbounds =</span> T))]</span>
+<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a>linest <span class="ot">&lt;-</span> linest[par<span class="sc">!=</span><span class="st">&#39;int&#39;</span>,]</span>
+<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a></span>
+<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">131418</span>)</span>
+<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a>linrobout <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nsamp){</span>
+<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">lm_robust</span>(y <span class="sc">~</span> x <span class="sc">+</span> w, <span class="at">data =</span> samplelist[[i]], <span class="at">se_type =</span> <span class="st">&quot;stata&quot;</span>, <span class="at">clusters =</span> clusid)</span>
+<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a>  outdt <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">confint</span>(out))</span>
+<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a>  linrobout[[i]] <span class="ot">&lt;-</span> outdt</span>
+<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a>}</span>
+<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a></span>
+<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a>linrobest <span class="ot">=</span> <span class="fu">do.call</span>(rbind, linrobout)</span>
+<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a>linrobest<span class="sc">$</span>par <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;int&#39;</span>,<span class="st">&#39;b1&#39;</span>,<span class="st">&#39;b2&#39;</span>), nsamp))</span>
+<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a><span class="fu">setnames</span>(linrobest, <span class="at">old =</span> <span class="fu">names</span>(linrobest), <span class="at">new =</span> <span class="fu">c</span>(<span class="st">&#39;lci&#39;</span>,<span class="st">&#39;uci&#39;</span>,<span class="st">&#39;par&#39;</span>))</span>
+<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a>linrobest[, b1 <span class="sc">:=</span> b1lin]</span>
+<span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a>linrobest[, b2 <span class="sc">:=</span> b2lin]</span>
+<span id="cb18-32"><a href="#cb18-32" tabindex="-1"></a></span>
+<span id="cb18-33"><a href="#cb18-33" tabindex="-1"></a>linrobest[par<span class="sc">==</span><span class="st">&#39;b1&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(b1, lci, uci, <span class="at">incbounds =</span> T))]</span>
+<span id="cb18-34"><a href="#cb18-34" tabindex="-1"></a>linrobest[par<span class="sc">==</span><span class="st">&#39;b2&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(b2, lci, uci, <span class="at">incbounds =</span> T))]</span>
+<span id="cb18-35"><a href="#cb18-35" tabindex="-1"></a>linrobest <span class="ot">&lt;-</span> linrobest[par<span class="sc">!=</span><span class="st">&#39;int&#39;</span>,]</span>
+<span id="cb18-36"><a href="#cb18-36" tabindex="-1"></a></span>
+<span id="cb18-37"><a href="#cb18-37" tabindex="-1"></a></span>
+<span id="cb18-38"><a href="#cb18-38" tabindex="-1"></a>linestboth <span class="ot">&lt;-</span> <span class="fu">rbind</span>(linest, linrobest)</span>
+<span id="cb18-39"><a href="#cb18-39" tabindex="-1"></a>linestboth<span class="sc">$</span>model <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;Standard&#39;</span>,<span class="st">&#39;Robust&#39;</span>), <span class="at">each=</span><span class="dv">2000</span>))</span>
+<span id="cb18-40"><a href="#cb18-40" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>cover) <span class="ot">&lt;-</span> <span class="st">&#39;Does CI cover true parameter?&#39;</span></span>
+<span id="cb18-41"><a href="#cb18-41" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>model) <span class="ot">&lt;-</span> <span class="st">&#39;Model SE estimation type&#39;</span></span>
+<span id="cb18-42"><a href="#cb18-42" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>par) <span class="ot">&lt;-</span> <span class="st">&#39;Parameter&#39;</span></span>
+<span id="cb18-43"><a href="#cb18-43" tabindex="-1"></a></span>
+<span id="cb18-44"><a href="#cb18-44" tabindex="-1"></a><span class="fu">html</span>(<span class="fu">summaryM</span>(cover <span class="sc">~</span> par<span class="sc">+</span>model, <span class="at">data=</span>linestboth))</span></code></pre></div>
+<table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em;' >
+<thead>
+<tr><td colspan='3' style='text-align: left;'>
+Descriptive Statistics<i>  (N=2000)</i>.  </td></tr>
+<tr><th style='border-bottom: 1px solid grey; font-weight: 900; border-top: 2px solid grey; width:25ex; text-align: center;'></th>
+<th style='font-weight: 900; border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>b1<br><i>N=1000</i></th>
+<th style='font-weight: 900; border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>b2<br><i>N=1000</i></th>
+</tr>
+</thead>
+<tbody>
+<tr><td colspan='3' style='width:25ex; font-weight: 900; text-align: left;'>Robust</td></tr>
+<tr>
+<td style='width:25ex; text-align: left;'>Does CI cover true parameter?</td>
+<td style='padding: 0 7px 0 7px; text-align: center;'>0.96 <span style="font-size: 80%;"> (960)</span></td>
+<td style='padding: 0 7px 0 7px; text-align: center;'>0.96 <span style="font-size: 80%;"> (965)</span></td>
+</tr>
+<tr><td colspan='3' style='width:25ex; font-weight: 900; text-align: left; border-top: 1px solid #BEBEBE;'>Standard</td></tr>
+<tr>
+<td style='width:25ex; border-bottom: 2px solid grey; text-align: left;'>Does CI cover true parameter?</td>
+<td style='padding: 0 7px 0 7px; border-bottom: 2px solid grey; text-align: center;'>0.96 <span style="font-size: 80%;"> (961)</span></td>
+<td style='padding: 0 7px 0 7px; border-bottom: 2px solid grey; text-align: center;'>0.86 <span style="font-size: 80%;"> (859)</span></td>
+</tr>
+</tbody>
+<tfoot><tr><td colspan='3'>
+Numbers after proportions are frequencies.</td></tr></tfoot>
+</table>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="fu">save</span>(linest, <span class="at">file=</span><span class="st">&#39;linest.RData&#39;</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="fu">save</span>(linest, <span class="at">file=</span><span class="st">&#39;linrobest.RData&#39;</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;linest.RData&#39;</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;linrobest.RData&#39;</span>)</span></code></pre></div>
+<p><br> <br></p>
+</div>
+</div>
+<div id="clustered-ordinal-logistic-example" class="section level1">
+<h1>Clustered Ordinal Logistic Example</h1>
+<p>Below is an example of how to conduct ordinal logistic regression
+using a data set that approximates LH’s real data.</p>
+<div id="data-prep" class="section level2">
+<h2>Data Prep</h2>
+<ul>
+<li>Select just the first data.table from <em>samplelist</em> used in
+the simulation study above to conduct the analyses (<span
+class="math inline">\(c=9,108\)</span> clusters &amp; <span
+class="math inline">\(N=32,428\)</span> observations)</li>
+<li>Make a unbalanced binary version of the level-2 predictor
+(<em>w</em>) treated as a factor (<em>wf</em>) with levels: 0=absent,
+1=present with 80% of responses assigned to the reference category
+(“Absent”)</li>
+</ul>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>dt1 <span class="ot">&lt;-</span> samplelist[[<span class="dv">1</span>]]</span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>dt1[, wf <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(w <span class="sc">&gt;</span> <span class="fu">quantile</span>(w, <span class="fl">0.8</span>), <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">levels=</span><span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">labels=</span><span class="fu">c</span>(<span class="st">&#39;Absent&#39;</span>,<span class="st">&#39;Present&#39;</span>))]</span></code></pre></div>
+<p><br> <br></p>
+</div>
+<div id="ordinal-logistic-regression" class="section level2">
+<h2>Ordinal Logistic Regression</h2>
+<p>Fit a proportional odds logistic regression models using the
+<em>polr()</em> function from the <strong>MASS</strong> package and then
+using the <em>lrm()</em> function in the <strong>rms</strong> package.
+We’ll compare results of the two.</p>
+<div id="polr-function" class="section level3">
+<h3>polr() function</h3>
+<ul>
+<li>Fit ordinal logistic regression assuming proportional odds ignoring
+clustering</li>
+<li>Confidence intervals are calculated using profile likelihood
+method</li>
+</ul>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>ord1 <span class="ot">&lt;-</span> <span class="fu">polr</span>(<span class="fu">factor</span>(y.ord) <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">data =</span> dt1, <span class="at">Hess =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>ord1.or <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">exp</span>(<span class="fu">coef</span>(ord1)))</span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>ord1ci <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">exp</span>(<span class="fu">confint</span>(ord1)))</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="fu">data.table</span>(<span class="at">Predictor=</span><span class="fu">c</span>(<span class="st">&#39;x&#39;</span>,<span class="st">&#39;wf&#39;</span>,<span class="st">&#39;x:wf&#39;</span>), <span class="st">&quot;Odds Ratio&quot;</span><span class="ot">=</span>ord1.or, ord1ci)</span></code></pre></div>
+<pre><code>##    Predictor Odds Ratio.V1     2.5 %   97.5 %
+##       &lt;char&gt;         &lt;num&gt;     &lt;num&gt;    &lt;num&gt;
+## 1:         x      1.305339 1.2632215 1.348965
+## 2:        wf      1.150885 1.0711637 1.235702
+## 3:      x:wf      1.000842 0.9329014 1.073950</code></pre>
+<p><br></p>
+<ul>
+<li>Refit the model accounting for non-independence due to clustering
+within families using the <em>coeftest()</em> function from
+<strong>lmtest</strong> package in conjunction with the
+<strong>sandwich</strong> package functions <em>vcovCL()</em></li>
+<li>Confidence intervals are mildly wider when using robust standard
+errors, particularly for the <em>wf</em> level-2 predictor</li>
+</ul>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>ord1coef.rob <span class="ot">&lt;-</span> <span class="fu">coeftest</span>(ord1, <span class="at">vcov=</span><span class="fu">vcovCL</span>(ord1, <span class="fu">factor</span>(dt1<span class="sc">$</span>clusid) ))</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>ord1or.rob <span class="ot">&lt;-</span> <span class="fu">exp</span>(ord1coef.rob)</span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>ord1or.rob.ci <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">confint</span>(ord1coef.rob))</span>
+<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="fu">data.table</span>(<span class="at">Predictor=</span><span class="fu">c</span>(<span class="st">&#39;x&#39;</span>,<span class="st">&#39;wf&#39;</span>,<span class="st">&#39;x:wf&#39;</span>), <span class="st">&quot;Odds Ratio&quot;</span><span class="ot">=</span> ord1or.rob[,<span class="dv">1</span>], ord1or.rob.ci)</span></code></pre></div>
+<pre><code>##    Predictor Odds Ratio     2.5 %   97.5 %
+##       &lt;char&gt;      &lt;num&gt;     &lt;num&gt;    &lt;num&gt;
+## 1:         x   1.305339 1.2627791 1.349333
+## 2:        wf   1.150885 1.0535423 1.257221
+## 3:      x:wf   1.000842 0.9329079 1.073723</code></pre>
+<p><br></p>
+</div>
+<div id="lrm-function" class="section level3">
+<h3>lrm() function</h3>
+<p>Fitting with the <em>lrm()</em> function is beneficial as we can take
+advantage of the many features of the <strong>rms</strong> package,
+especially the <em>impactPO</em> function to evaluate the consequences
+of violation of the proportional odds assumption.</p>
+<p><br></p>
+<ul>
+<li>Set the data distribution to allow for use of helpful
+<strong>rms</strong> functions</li>
+<li>Will be helpful later for plotting and testing proportional odds
+assumption</li>
+</ul>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>dd <span class="ot">&lt;-</span> <span class="fu">datadist</span>(dt1)</span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="fu">options</span>(<span class="at">datadist=</span>dd)</span></code></pre></div>
+<p><br></p>
+<ul>
+<li>Fit the same proportional odds regression model previously fit with
+the <em>polr()</em> function</li>
+<li>Obtain robust standard errors using the <strong>robcov()</strong>
+function after fitting the model</li>
+<li>Odds ratio confidence intervals are same to several decimal places
+as those obtained with <em>polr()</em> in conjunction with the
+<strong>sandwich</strong> package</li>
+</ul>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a>lrm1 <span class="ot">&lt;-</span> <span class="fu">lrm</span>(y.ord <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">data =</span> dt1, <span class="at">x=</span>T, <span class="at">y=</span>T)</span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>lrm1rob <span class="ot">&lt;-</span> <span class="fu">robcov</span>(lrm1, <span class="at">cluster=</span>dt1<span class="sc">$</span>clusid)</span>
+<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="fu">summary</span>(lrm1rob, <span class="at">x=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>))</span></code></pre></div>
+<pre><code>##              Effects              Response : y.ord 
+## 
+##  Factor              Low High Diff. Effect  S.E.     Lower 0.95 Upper 0.95
+##  x                   0   1     1    0.26646 0.016911 0.233320   0.29961   
+##   Odds Ratio         0   1     1    1.30530       NA 1.262800   1.34930   
+##  wf - Present:Absent 1   2    NA    0.14053 0.045076 0.052185   0.22888   
+##   Odds Ratio         1   2    NA    1.15090       NA 1.053600   1.25720   
+## 
+## Adjusted to: x=0.001257004 wf=Absent</code></pre>
+<p><br></p>
+<p>Plot the conditional odds ratios for the two predictors</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">summary</span>(lrm1rob, wf, <span class="at">x=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>)))</span></code></pre></div>
+<p><img src="clustord_files/figure-html/lrm1orplot-1.png" width="672" />
+<br></p>
+<ul>
+<li>Plot the model-predicted probabilities of being in higher levels of
+the ordinal outcome</li>
+<li>Prediction across all values of <em>x</em> by levels of
+<em>wf</em></li>
+</ul>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">Predict</span>(lrm1, x, wf, <span class="at">kint =</span> <span class="dv">1</span>, <span class="at">fun =</span> plogis)) <span class="sc">+</span></span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">&#39;Levels of Level-1 Predictor (x)&#39;</span>,</span>
+<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a>       <span class="at">y=</span><span class="st">&#39;Predicted Probability&#39;</span>,</span>
+<span id="cb29-4"><a href="#cb29-4" tabindex="-1"></a>       <span class="at">title=</span><span class="st">&#39;Model-Predicted Probability of Being in the &quot;Medium&quot; Outcome Category&#39;</span>)</span></code></pre></div>
+<p><img src="clustord_files/figure-html/lrm1predplot-1.png" width="672" /></p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">Predict</span>(lrm1, x, wf, <span class="at">kint =</span> <span class="dv">2</span>, <span class="at">fun =</span> plogis)) <span class="sc">+</span></span>
+<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">&#39;Levels of Level-1 Predictor (x)&#39;</span>,</span>
+<span id="cb30-3"><a href="#cb30-3" tabindex="-1"></a>       <span class="at">y=</span><span class="st">&#39;Predicted Probability&#39;</span>,</span>
+<span id="cb30-4"><a href="#cb30-4" tabindex="-1"></a>       <span class="at">title=</span><span class="st">&#39;Model-Predicted Probability of Being in the &quot;High&quot; Outcome Category&#39;</span>)</span></code></pre></div>
+<p><img src="clustord_files/figure-html/lrm1predplot-2.png" width="672" /></p>
+<p><br></p>
+</div>
+<div id="evaluate-proportional-odds-assumption" class="section level3">
+<h3>Evaluate Proportional Odds Assumption</h3>
+<p>In this section, we use <img
+src="https://www.fharrell.com/post/impactpo/" alt="procedures" />
+described by Harrell to evaluate the impact of potential proportional
+odds (PO) assumption violations. This involves comparing the PO model to
+a partial PO model (relax PO assumption for subset of predictors) and
+multinomial logistic model (don’t assume PO for any predictors). As
+described by Harrell, it is important to weight the potential benefits
+of relaxing/eliminating the PO assumption against the drawbacks of added
+model complexity, overfitting, &amp; poor model performance in future
+data sets.</p>
+<p><br></p>
+<ul>
+<li>Create a new data frame to house predicted values based on our 3
+types of logistic regression models: PO, partial PO, and
+multinomial</li>
+<li>Allow levels of both <em>x</em> and <em>wf</em> to vary, with
+predicted probabilities calculated at 1st (-0.668), 2nd (0.001), &amp;
+3rd quartiles (0.684) of <em>x</em> and both levels of <em>wf</em>
+(absent &amp; present)</li>
+<li>Results in six predicted values across combinations of <em>x</em>
+and <em>wf</em></li>
+<li>View the 6 combinations of predictor values</li>
+<li>Note, might make sense to use more values of <em>x</em> but just
+using 3 here for demonstration purposes</li>
+</ul>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">x=</span><span class="fu">c</span>(<span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.25</span>),</span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a>                        <span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.5</span>),</span>
+<span id="cb31-3"><a href="#cb31-3" tabindex="-1"></a>                        <span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.75</span>)),</span>
+<span id="cb31-4"><a href="#cb31-4" tabindex="-1"></a>                    <span class="at">wf=</span><span class="fu">levels</span>(dt1<span class="sc">$</span>wf))</span>
+<span id="cb31-5"><a href="#cb31-5" tabindex="-1"></a>pred</span></code></pre></div>
+<pre><code>##              x      wf
+## 1 -0.667903374  Absent
+## 2  0.001257004  Absent
+## 3  0.683603344  Absent
+## 4 -0.667903374 Present
+## 5  0.001257004 Present
+## 6  0.683603344 Present</code></pre>
+<p><br></p>
+<ul>
+<li>Use the <em>impactPO()</em> function to calculate predicted
+probabilities for <em>y.ord</em> at various levels of predictors stored
+in the <em>pred</em> data frame from the prior step</li>
+<li>Relax PO assumption for <em>wf</em> predictor specifically</li>
+<li>Use 500 bootstrap samples to calculate percentile confidence
+intervals for difference in predicted values across the 3 different
+logistic models – sig differences would be indicative of violation of
+proportional odds assumption</li>
+</ul>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="co"># poimp &lt;- impactPO(y.ord ~ x*wf, nonpo = ~ wf,</span></span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a><span class="co">#               data=dt1, newdata=pred, B=500)</span></span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a><span class="co"># save(poimp, file=&#39;poimp.RData&#39;)</span></span>
+<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;poimp.RData&#39;</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a>poimp</span></code></pre></div>
+<pre><code>##                           PO       PPO      Multinomial
+## Deviance                  37350.30 37348.10 37342.35   
+## d.f.                      5        6        8          
+## AIC                       37360.30 37360.10 37358.35   
+## p                         3        4        6          
+## LR chi^2                  349.71   351.92   357.67     
+## LR - p                    346.71   347.92   351.67     
+## LR chi^2 test for PO               2.21     7.95       
+##   d.f.                              1        3         
+##   Pr(&gt;chi^2)                       0.1374   0.0470     
+## MCS R2                    0.011    0.011    0.011      
+## MCS R2 adj                0.011    0.011    0.011      
+## McFadden R2               0.009    0.009    0.009      
+## McFadden R2 adj           0.009    0.009    0.009      
+## Mean |difference| from PO          0.002    0.002      
+## 
+## Covariate combination-specific mean |difference| in predicted probabilities
+## 
+##         method            x      wf Mean |difference|
+## 1          PPO -0.667903374  Absent             0.001
+## 2          PPO  0.001257004  Absent             0.001
+## 3          PPO  0.683603344  Absent             0.001
+## 4          PPO -0.667903374 Present             0.002
+## 5          PPO  0.001257004 Present             0.003
+## 6          PPO  0.683603344 Present             0.003
+## 11 Multinomial -0.667903374  Absent             0.002
+## 21 Multinomial  0.001257004  Absent             0.001
+## 31 Multinomial  0.683603344  Absent             0.001
+## 41 Multinomial -0.667903374 Present             0.000
+## 51 Multinomial  0.001257004 Present             0.002
+## 61 Multinomial  0.683603344 Present             0.004
+## 
+## Bootstrap 0.95 confidence intervals for differences in model predicted
+## probabilities based on 500 bootstraps
+## 
+## 
+##            x     wf
+## 1 -0.6679034 Absent
+## 
+## PO - PPO probability estimates
+## 
+##       Low Medium  High
+## Lower   0 -0.002 0.000
+## Upper   0  0.000 0.002
+## 
+## PO - Multinomial probability estimates
+## 
+##         Low Medium  High
+## Lower 0.000 -0.005 0.000
+## Upper 0.001  0.000 0.005
+## 
+##             x     wf
+## 2 0.001257004 Absent
+## 
+## PO - PPO probability estimates
+## 
+##       Low Medium  High
+## Lower   0 -0.002 0.000
+## Upper   0  0.000 0.002
+## 
+## PO - Multinomial probability estimates
+## 
+##       Low Medium  High
+## Lower   0 -0.002 0.000
+## Upper   0  0.000 0.003
+## 
+##           x     wf
+## 3 0.6836033 Absent
+## 
+## PO - PPO probability estimates
+## 
+##       Low Medium  High
+## Lower   0 -0.003 0.000
+## Upper   0  0.000 0.002
+## 
+## PO - Multinomial probability estimates
+## 
+##          Low Medium   High
+## Lower -0.001 -0.002 -0.002
+## Upper  0.000  0.003  0.001
+## 
+##            x      wf
+## 4 -0.6679034 Present
+## 
+## PO - PPO probability estimates
+## 
+##          Low Medium   High
+## Lower -0.001 -0.001 -0.006
+## Upper  0.000  0.008  0.001
+## 
+## PO - Multinomial probability estimates
+## 
+##          Low Medium   High
+## Lower -0.001 -0.005 -0.006
+## Upper  0.001  0.007  0.005
+## 
+##             x      wf
+## 5 0.001257004 Present
+## 
+## PO - PPO probability estimates
+## 
+##          Low Medium   High
+## Lower -0.002 -0.001 -0.007
+## Upper  0.000  0.009  0.001
+## 
+## PO - Multinomial probability estimates
+## 
+##          Low Medium   High
+## Lower -0.002 -0.002 -0.007
+## Upper  0.000  0.008  0.002
+## 
+##           x      wf
+## 6 0.6836033 Present
+## 
+## PO - PPO probability estimates
+## 
+##          Low Medium   High
+## Lower -0.002 -0.001 -0.008
+## Upper  0.000  0.010  0.001
+## 
+## PO - Multinomial probability estimates
+## 
+##          Low Medium  High
+## Lower -0.004  0.000 -0.01
+## Upper  0.000  0.014  0.00</code></pre>
+<ul>
+<li>Mean differences across PO to partial PO and PO to multinomial are
+small</li>
+<li>A number of differences in predictions at specific combinations of
+<em>x</em> and <em>wf</em> are statistically significant<br />
+</li>
+<li>R^2 values across the three methods are indistinguishable</li>
+<li>Non-significant diff between PO and partial PO relaxing the PO
+assumption for <em>wf</em></li>
+<li>Borderline significant improvement of multinomial model over PO
+(p=.047) – potential indication that PO assumption is less viable for
+effect of <em>x</em> than for <em>wf</em></li>
+<li>AIC slightly favors partial PO and multinomial models</li>
+<li>Overall, seems like the benefits of partial PO model relaxing PO
+assumption for effect of <em>wf</em> is not worth the added complexity
+even though AIC is tiny bit better for partial PO (37360.10) compared to
+PO (37360.30) model</li>
+</ul>
+<p><br></p>
+<ul>
+<li>As there was some indication that the multinomial model was best in
+the <em>impactPO()</em> analysis and the benefits of relaxing the PO
+assumption for <em>wf</em> were minuscule at best, rerun the
+<em>impactPO()</em> model comparing the PO model to a partial PO model
+relaxing the PO assumption only for the effect of <em>x</em>.</li>
+<li>No need to compare to the multinomial model again, so use the
+<em>relax=‘ppo’</em> argument so that the function does not needlessly
+rerun the multinomial model</li>
+</ul>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a><span class="co"># poimp1 &lt;- impactPO(y.ord ~ x*wf, nonpo = ~ x, relax = &#39;ppo&#39;,</span></span>
+<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a><span class="co">#               data=dt1, newdata=pred, B=500)</span></span>
+<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a><span class="co"># save(poimp1, file=&#39;poimp1.RData&#39;)</span></span>
+<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;poimp1.RData&#39;</span>)</span>
+<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a>poimp1</span></code></pre></div>
+<pre><code>##                           PO       PPO     
+## Deviance                  37350.30 37344.72
+## d.f.                      5        6       
+## AIC                       37360.30 37356.72
+## p                         3        4       
+## LR chi^2                  349.71   355.30  
+## LR - p                    346.71   351.30  
+## LR chi^2 test for PO               5.59    
+##   d.f.                              1      
+##   Pr(&gt;chi^2)                       0.0181  
+## MCS R2                    0.011    0.011   
+## MCS R2 adj                0.011    0.011   
+## McFadden R2               0.009    0.009   
+## McFadden R2 adj           0.009    0.009   
+## Mean |difference| from PO          0.001   
+## 
+## Covariate combination-specific mean |difference| in predicted probabilities
+## 
+##   method            x      wf Mean |difference|
+## 1    PPO -0.667903374  Absent             0.001
+## 2    PPO  0.001257004  Absent             0.000
+## 3    PPO  0.683603344  Absent             0.001
+## 4    PPO -0.667903374 Present             0.002
+## 5    PPO  0.001257004 Present             0.000
+## 6    PPO  0.683603344 Present             0.001
+## 
+## Bootstrap 0.95 confidence intervals for differences in model predicted
+## probabilities based on 500 bootstraps
+## 
+## 
+##            x     wf
+## 1 -0.6679034 Absent
+## 
+## PO - PPO probability estimates
+## 
+##         Low Medium  High
+## Lower 0.000 -0.004 0.000
+## Upper 0.001  0.000 0.003
+## 
+##             x     wf
+## 2 0.001257004 Absent
+## 
+## PO - PPO probability estimates
+## 
+##       Low Medium  High
+## Lower   0 -0.001 0.000
+## Upper   0  0.000 0.001
+## 
+##           x     wf
+## 3 0.6836033 Absent
+## 
+## PO - PPO probability estimates
+## 
+##          Low Medium   High
+## Lower -0.001  0.000 -0.002
+## Upper  0.000  0.003  0.000
+## 
+##            x      wf
+## 4 -0.6679034 Present
+## 
+## PO - PPO probability estimates
+## 
+##         Low Medium  High
+## Lower 0.000 -0.005 0.000
+## Upper 0.001  0.000 0.004
+## 
+##             x      wf
+## 5 0.001257004 Present
+## 
+## PO - PPO probability estimates
+## 
+##       Low Medium  High
+## Lower   0 -0.001 0.000
+## Upper   0  0.000 0.001
+## 
+##           x      wf
+## 6 0.6836033 Present
+## 
+## PO - PPO probability estimates
+## 
+##          Low Medium   High
+## Lower -0.001  0.000 -0.002
+## Upper  0.000  0.003  0.000</code></pre>
+<ul>
+<li>Partial PO model with no PO assumption for <em>x</em> effect is
+statistically significantly better than the PO model (for what that’s
+worth)</li>
+<li>AIC favors the partial PO model too</li>
+</ul>
+<p><br></p>
+</div>
+<div id="partial-po-model" class="section level3">
+<h3>Partial PO Model</h3>
+<ul>
+<li>Based on the results of the <em>impactPO()</em> analyses, fit a
+partial PO model assuming PO for the effect of <em>wf</em> but NOT for
+<em>x</em></li>
+<li>As effect of <em>x</em> is modeled to interact with <em>wf</em> and
+we are allowing separate effects of <em>x</em> for crossing the two
+<em>y.ord</em> thresholds, also relax PO assumption for the interaction
+– i.e., allow effect of interaction be different for moving across
+threshold separating “low” and “medium” and threshold separating
+“medium” and “high”</li>
+<li>Note that there is only one effect estimate for <em>wf</em> because
+we assume that the effect of <em>wf</em> on moving across the first and
+second thresholds is the same (PO assumption)</li>
+<li>There are two effects for <em>x</em> and the <span
+class="math inline">\(x*wf\)</span> interaction as we do NOT assume the
+effect is constant across thresholds of <em>y.ord</em></li>
+</ul>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>vglm1 <span class="ot">&lt;-</span> <span class="fu">vglm</span>(y.ord <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">family=</span><span class="fu">cumulative</span>(<span class="at">parallel=</span><span class="cn">FALSE</span><span class="sc">~</span>x<span class="sc">+</span>x<span class="sc">:</span>wf), <span class="at">data=</span>dt1)</span></code></pre></div>
+</div>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
