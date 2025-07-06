@@ -38,6 +38,7 @@ require(estimatr)
 ```
 
 <br>
+<br>
 
 # Simulation Study
 
@@ -334,7 +335,7 @@ dt1[, wf := factor(ifelse(w > quantile(w, 0.8), 1, 0), levels=0:1, labels=c('Abs
 
 ## Ordinal Logistic Regression
 
-Fit a proportional odds logistic regression models using the *polr()* function from the **MASS** package and then using the *lrm()* function in the **rms** package. We'll compare results of the two. 
+Fit a proportional odds logistic regression models using the *polr()* function from the **MASS** [package](https://www.rdocumentation.org/packages/MASS/versions/7.3-65) and then using the *lrm()* function in the **rms** [package](https://www.rdocumentation.org/packages/rms/versions/8.0-0). We'll compare results of the two. 
 
 ### polr() function
 
@@ -349,7 +350,7 @@ data.table(Predictor=c('x','wf','x:wf'), "Odds Ratio"=ord1.or, ord1ci)
 
 <br>
 
-* Refit the model accounting for non-independence due to clustering within families using the *coeftest()* function from **lmtest** package in conjunction with the **sandwich** package functions *vcovCL()* 
+* Refit the model accounting for non-independence due to clustering within families using the *coeftest()* function from **lmtest** [package](https://www.rdocumentation.org/packages/lmtest/versions/0.9-40) in conjunction with the **sandwich** [package](https://www.rdocumentation.org/packages/sandwich/versions/3.0-2) function *vcovCL()* 
 * Confidence intervals are mildly wider when using robust standard errors, particularly for the *wf* level-2 predictor
 ```{r ord1propodds, cache=TRUE}
 ord1coef.rob <- coeftest(ord1, vcov=vcovCL(ord1, factor(dt1$clusid) ))
@@ -411,7 +412,7 @@ ggplot(Predict(lrm1, x, wf, kint = 2, fun = plogis)) +
 
 ### Evaluate Proportional Odds Assumption
 
-In this section, we use ![procedures](https://www.fharrell.com/post/impactpo/) described by Harrell to evaluate the impact of potential proportional odds (PO) assumption violations. This involves comparing the PO model to a partial PO model (relax PO assumption for subset of predictors) and multinomial logistic model (don't assume PO for any predictors). As described by Harrell, it is important to weight the potential benefits of relaxing/eliminating the PO assumption against the drawbacks of added model complexity, overfitting, & poor model performance in future data sets.  
+In this section, we use [procedures](https://www.fharrell.com/post/impactpo/) described by Harrell to evaluate the impact of potential proportional odds (PO) assumption violations. This involves comparing the PO model to a partial PO model (relax PO assumption for subset of predictors) and multinomial logistic model (don't assume PO for any predictors). As described by Harrell, it is important to weight the potential benefits of relaxing/eliminating the PO assumption against the drawbacks of added model complexity, overfitting, & poor model performance in future data sets.  
 
 <br>
 
@@ -473,7 +474,7 @@ poimp1
 
 ### Partial PO Model
 
-* Based on the results of the *impactPO()* analyses, fit a partial PO model assuming PO for the effect of *wf* but NOT for *x*
+* Based on the results of the *impactPO()* analyses, fit a partial PO model assuming PO for the effect of *wf* but NOT for *x* using the *vglm()* function from the **VGAM** [package](https://www.rdocumentation.org/packages/VGAM/versions/1.1-8)
 * As effect of *x* is modeled to interact with *wf* and we are allowing separate effects of *x* for crossing the two *y.ord* thresholds, also relax PO assumption for the interaction -- i.e., allow effect of interaction be different for moving across threshold separating "low" and "medium" and threshold separating "medium" and "high"
 * Note that there is only one effect estimate for *wf* because we assume that the effect of *wf* on moving across the first and second thresholds is the same (PO assumption)
 * There are two effects for *x* and the $x*wf$ interaction as we do NOT assume the effect is constant across thresholds of *y.ord*

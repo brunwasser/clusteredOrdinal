@@ -995,8 +995,11 @@ class="math inline">\(N=32,428\)</span> observations)</li>
 <div id="ordinal-logistic-regression" class="section level2">
 <h2>Ordinal Logistic Regression</h2>
 <p>Fit a proportional odds logistic regression models using the
-<em>polr()</em> function from the <strong>MASS</strong> package and then
-using the <em>lrm()</em> function in the <strong>rms</strong> package.
+<em>polr()</em> function from the <strong>MASS</strong> <a
+href="https://www.rdocumentation.org/packages/MASS/versions/7.3-65">package</a>
+and then using the <em>lrm()</em> function in the <strong>rms</strong>
+<a
+href="https://www.rdocumentation.org/packages/rms/versions/8.0-0">package</a>.
 We’ll compare results of the two.</p>
 <div id="polr-function" class="section level3">
 <h3>polr() function</h3>
@@ -1019,8 +1022,11 @@ method</li>
 <ul>
 <li>Refit the model accounting for non-independence due to clustering
 within families using the <em>coeftest()</em> function from
-<strong>lmtest</strong> package in conjunction with the
-<strong>sandwich</strong> package functions <em>vcovCL()</em></li>
+<strong>lmtest</strong> <a
+href="https://www.rdocumentation.org/packages/lmtest/versions/0.9-40">package</a>
+in conjunction with the <strong>sandwich</strong> <a
+href="https://www.rdocumentation.org/packages/sandwich/versions/3.0-2">package</a>
+function <em>vcovCL()</em></li>
 <li>Confidence intervals are mildly wider when using robust standard
 errors, particularly for the <em>wf</em> level-2 predictor</li>
 </ul>
@@ -1097,14 +1103,14 @@ the ordinal outcome</li>
 </div>
 <div id="evaluate-proportional-odds-assumption" class="section level3">
 <h3>Evaluate Proportional Odds Assumption</h3>
-<p>In this section, we use <img
-src="https://www.fharrell.com/post/impactpo/" alt="procedures" />
-described by Harrell to evaluate the impact of potential proportional
-odds (PO) assumption violations. This involves comparing the PO model to
-a partial PO model (relax PO assumption for subset of predictors) and
-multinomial logistic model (don’t assume PO for any predictors). As
-described by Harrell, it is important to weight the potential benefits
-of relaxing/eliminating the PO assumption against the drawbacks of added
+<p>In this section, we use <a
+href="https://www.fharrell.com/post/impactpo/">procedures</a> described
+by Harrell to evaluate the impact of potential proportional odds (PO)
+assumption violations. This involves comparing the PO model to a partial
+PO model (relax PO assumption for subset of predictors) and multinomial
+logistic model (don’t assume PO for any predictors). As described by
+Harrell, it is important to weight the potential benefits of
+relaxing/eliminating the PO assumption against the drawbacks of added
 model complexity, overfitting, &amp; poor model performance in future
 data sets.</p>
 <p><br></p>
@@ -1405,7 +1411,9 @@ worth)</li>
 <ul>
 <li>Based on the results of the <em>impactPO()</em> analyses, fit a
 partial PO model assuming PO for the effect of <em>wf</em> but NOT for
-<em>x</em></li>
+<em>x</em> using the <em>vglm()</em> function from the
+<strong>VGAM</strong> <a
+href="https://www.rdocumentation.org/packages/VGAM/versions/1.1-8">package</a></li>
 <li>As effect of <em>x</em> is modeled to interact with <em>wf</em> and
 we are allowing separate effects of <em>x</em> for crossing the two
 <em>y.ord</em> thresholds, also relax PO assumption for the interaction
