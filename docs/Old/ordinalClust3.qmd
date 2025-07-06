@@ -1,0 +1,269 @@
+---
+title: "Ordinal Regression for Clustered Data"
+format: html
+editor: visual
+---
+
+# Workspace Prep
+
+Clear the 
+```{r packages}
+rm(list=ls())
+require(fungible)
+require(rms)
+require(Hmisc)
+#require(mnormt)
+require(tidyverse)
+require(data.table)
+require(infer)
+require(MASS)
+require(lme4)
+require(psychometric)
+require(ordinal)
+require(lmtest)
+require(sandwich)
+require(VGAM)
+```
+
+<br>
+
+# Simulation Study
+
+```{r sim}
+set.seed(123)
+cluster <- 100000
+id <- factor(rep(1:cluster, sample(2:8, cluster, prob = c(.20, .40, .20, .10, .05, .03, .02), replace = TRUE)))
+
+sig.x <- matrix(c(1.0, 0.1,
+                0.1, 1.0),
+              nrow=2)
+
+mn.x <- c(0,0)
+
+set.seed(456)
+xmat <- mvrnorm(n=length(id),
+              mu=mn.x,
+              Sigma=sig.x)
+
+dt <- data.table(clusid=id, x1=xmat[,1], x2=xmat[,2])
+x2mn <- dt[, x2 := mean(x2), by = clusid]
+
+set.seed(789)
+dt[, e := rnorm(length(id), mean=0, sd=.975)]
+dt[, int := 0]
+
+set.seed(101112)
+u00 <- rnorm(cluster, mean=0, sd=.75)
+set.seed(131415)
+u01 <- rnorm(cluster, mean=0, sd=.35)
+
+reff <- data.table(clusid = factor(unique(id)), u00, u01)
+
+dt <- merge(dt, reff, by = 'clusid')
+
+dt[, b1 := 0.2]
+dt[, b2 := 0.15]
+
+dt[, y := (int+u00) + (b1*x1+u01) + (b2*x2) + e ]
+
+boxplot <- ggplot(dt[sample(clusid, 15)], aes(y, clusid)) +
+  geom_boxplot()
+boxplot
+
+dt[, y.cnt := cut(y, breaks = c(quantile(y, .9), quantile(y, .93), quantile(y, .95), quantile(y, .97), quantile(y, .98), quantile(y, .99)),
+                     labels = F, include.lowest = T)]
+
+dt[, y.cnt := cut(y,
+                  breaks = c(quantile(y, 0),
+                             quantile(y, 0.9),
+                             quantile(y, 0.925),
+                             quantile(y, 0.95),
+                             quantile(y, 0.975),
+                             quantile(y, 1)),
+                    labels=F)]
+
+```
+<br>
+
+Get population level parameters
+
+```{r poppar}
+# pop.ord <- clmm(factor(y.cnt) ~ x1 + x2 + (x1|clusid), 
+#                 data = dt, link = "logit")
+#save(pop.ord, file='pop.ord')
+load('pop.ord')
+coef(pop.ord)
+
+
+pop.lin <- ols(y ~ x1 + x2, data = dt)
+save(pop.lin, file='pop.lin')
+load('pop.lin')
+summary(pop.lin)
+b1lin <- summary(pop.lin, x1=c(0,1), x2=c(0,1))[1,4]
+b2lin <- summary(pop.lin, x1=c(0,1), x2=c(0,1))[2,4]
+```
+
+
+<br>
+
+Sample clusters from the population
+
+```{r samplelist}
+nsamp <- 500
+nclus <- 9108
+
+
+
+clussampler <- function(data, clusid, nclus, nsamp){
+  dtsamp <- data[sample(unique(clusid), nclus), .SD ]
+}
+
+# samplelist <- list()
+# for(i in 1:nsamp){
+#   sampled <- clussampler(dt, clusid, nclus, nsamp)
+#   samplelist[[i]] <- sampled
+# }
+#save(samplelist, file='samplelist.RData')
+load('samplelist.RData')
+
+# ordoutx1 <- list()
+# ordoutx2 <- list()
+# for(i in 1:nsamp){
+#  # dd <- datadist(samplelist[[i]])
+# #  options(datadist=dd)
+#   outx1 <- data.table(summary(lrm(y.cnt ~ x1 + x2, data = samplelist[[i]])))[1,c(4,6,7)]
+#   outx1$i <- i
+#   ordoutx1[[i]] <- outx1
+#   outx2 <- data.table(summary(lrm(y.cnt ~ x1 + x2, data = samplelist[[i]])))[3,c(4,6,7)]
+#   ordoutx2[[i]] <- outx2
+# }
+# 
+# ordx1est = do.call(rbind, ordoutx1)
+# setnames(ordx1est, old = names(ordx1est), new = c('x1est','x1lci','x1uci','iteration'))
+# ordx2est = do.call(rbind, ordoutx2)
+# setnames(ordx2est, old = names(ordx2est), new = c('x2est','x2lci','x2uci'))
+# ordest <- cbind(ordx1est, ordx2est)
+# ordest[, b1 := pop.ord$beta[1]]
+# ordest[, b2 := pop.ord$beta[2]]
+# 
+# ordest[, coverb1 := factor(between(b1, x1lci, x1uci, incbounds = T))]
+# ordest[, coverb2 := factor(between(b2, x2lci, x2uci, incbounds = T))]
+```
+
+<br>
+
+```{r include=FALSE}
+# ordoutrobx1 <- list()
+# ordoutrobx2 <- list()
+# for(i in 1:nsamp){
+#   dd <- datadist(samplelist[[i]])
+#   options(datadist=dd)
+#   out <- lrm(y.cnt ~ x1 + x2, data = samplelist[[i]], x=TRUE, y=TRUE)
+#   outx1rob <- data.table(summary(robcov(out)))[1,c(4,6,7)]
+#   outx2rob <- data.table(summary(robcov(out)))[3,c(4,6,7)]
+#   outx1rob$i <- i
+#   ordoutrobx1[[i]] <- outx1rob
+#   ordoutrobx2[[i]] <- outx2rob
+# }
+# 
+# ordrobx1est = do.call(rbind, ordoutrobx1)
+# setnames(ordrobx1est, old = names(ordrobx1est), new = c('x1est','x1lci','x1uci','iteration'))
+# ordrobx2est = do.call(rbind, ordoutrobx2)
+# setnames(ordrobx2est, old = names(ordrobx2est), new = c('x2est','x2lci','x2uci'))
+# ordrobest <- cbind(ordrobx1est, ordrobx2est)
+# ordrobest[, b1 := pop.ord$beta[1]]
+# ordrobest[, b2 := pop.ord$beta[2]]
+# 
+# ordrobest[, coverb1 := factor(between(b1, x1lci, x1uci, incbounds = T))]
+# ordrobest[, coverb2 := factor(between(b2, x2lci, x2uci, incbounds = T))]
+```
+
+
+
+## Linear models 
+```{r linmods}
+
+# linout <- list()
+# for(i in 1:nsamp){
+#   out <- lm(y ~ x1 + x2, data = samplelist[[i]])
+#   outdt <- data.table(confint(out))
+#   linout[[i]] <- outdt
+# }
+# 
+# linest = do.call(rbind, linout)
+# linest$par <- factor(rep(c('int','b1','b2'), nsamp))
+# setnames(linest, old = names(linest), new = c('lci','uci','par'))
+# linest[, b1 := b1lin]
+# linest[, b2 := b2lin]
+# 
+# linest[par=='b1', cover := factor(between(b1, lci, uci, incbounds = T))]
+# linest[par=='b2', cover := factor(between(b2, lci, uci, incbounds = T))]
+# linest <- linest[par!='int',]
+# html(summaryM(cover ~ par, data=linest))
+# 
+# 
+# linrobout <- list()
+# for(i in 1:nsamp){
+#   out <- lm_robust(y ~ x1 + x2, data = samplelist[[i]], se_type = "stata", clusters = clusid)
+#   outdt <- data.table(confint(out))
+#   linrobout[[i]] <- outdt
+# }
+# 
+# linrobest = do.call(rbind, linrobout)
+# linrobest$par <- factor(rep(c('int','b1','b2'), nsamp))
+# setnames(linrobest, old = names(linrobest), new = c('lci','uci','par'))
+# linrobest[, b1 := b1lin]
+# linrobest[, b2 := b2lin]
+# 
+# linrobest[par=='b1', cover := factor(between(b1, lci, uci, incbounds = T))]
+# linrobest[par=='b2', cover := factor(between(b2, lci, uci, incbounds = T))]
+# linrobest <- linrobest[par!='int',]
+# html(summaryM(cover ~ par, data=linrobest))
+
+#save(linest, file='linest.RData')
+#save(linest, file='linrobest.RData')
+load('linest.RData')
+load('linrobest.RData')
+```
+
+<br>
+<br>
+
+# Ordinal Example
+
+Select just the first data.table from *samplelist* to conduct the analyses & make a binary version of x2 treated as a factor (*x2f*).
+```{r ordprep}
+dt1 <- samplelist[[1]]
+dt1[, x2f := factor(ifelse(x2 > quantile(x2, 0.8), 1, 0), levels=0:1, labels=c('Absent','Present'))]
+
+```
+
+<br>
+
+Fit a cumulative odds proportional odds logistic regression models using the *polr* function from the **MASS** package
+```{r ord1}
+ord1 <- polr(factor(y.cnt) ~ x1*x2f, data = dt1, Hess = TRUE)
+ord1coef <- exp(coef(ord1)[5:7])
+ord1ci <- exp(confint(ord1))
+
+```
+
+<br>
+
+Fit the model accounting for non-independence due to clustering within families using the *coeftest* function from **lmtest** package in conjunction with the **sandwich** package functions *vcovCL* . 
+```{r ord1propodds}
+ord1coef.rob <- coeftest(ord1, vcov=vcovCL(m1, factor(dt1$clusid) ))
+ord1or.rob <- exp(ord1coef.rob[5:7,1])
+ord1or.rob.ci <- exp(confint(ord1coef.rob)[5:7])
+```
+
+<br>
+
+# Negative Binomial Model
+
+```{r nbmod}
+nbmod1 <- glm.nb(y.cnt ~ x1*x2f, data = dt1)
+nbmod1.coef <- coeftest(nbmod1)
+nbmod1.coef.rob <- coeftest(nbmod1, vcov=vcovCL(nbmod1, factor(dt1$clusid) ))
+```
+

@@ -5,7 +5,7 @@ date: "2025-06-30"
 output:
   html_document:
     toc: yes
-    toc_depth: 2
+    toc_depth: 3
     toc_float: yes
     theme: cosmo
     code_folding: hide
@@ -479,6 +479,7 @@ poimp1
 * There are two effects for *x* and the $x*wf$ interaction as we do NOT assume the effect is constant across thresholds of *y.ord*
 ```{r vglm1, cache=TRUE}
 vglm1 <- vglm(y.ord ~ x*wf, family=cumulative(parallel=FALSE~x+x:wf), data=dt1)
+summary(vglm1)
 ```
 
 

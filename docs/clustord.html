@@ -1396,7 +1396,39 @@ second thresholds is the same (PO assumption)</li>
 class="math inline">\(x*wf\)</span> interaction as we do NOT assume the
 effect is constant across thresholds of <em>y.ord</em></li>
 </ul>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>vglm1 <span class="ot">&lt;-</span> <span class="fu">vglm</span>(y.ord <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">family=</span><span class="fu">cumulative</span>(<span class="at">parallel=</span><span class="cn">FALSE</span><span class="sc">~</span>x<span class="sc">+</span>x<span class="sc">:</span>wf), <span class="at">data=</span>dt1)</span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>vglm1 <span class="ot">&lt;-</span> <span class="fu">vglm</span>(y.ord <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">family=</span><span class="fu">cumulative</span>(<span class="at">parallel=</span><span class="cn">FALSE</span><span class="sc">~</span>x<span class="sc">+</span>x<span class="sc">:</span>wf), <span class="at">data=</span>dt1)</span>
+<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="fu">summary</span>(vglm1)</span></code></pre></div>
+<pre><code>## 
+## Call:
+## vglm(formula = y.ord ~ x * wf, family = cumulative(parallel = FALSE ~ 
+##     x + x:wf), data = dt1)
+## 
+## Coefficients: 
+##                Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept):1  1.560717   0.016743  93.215  &lt; 2e-16 ***
+## (Intercept):2  2.529076   0.022980 110.056  &lt; 2e-16 ***
+## x:1           -0.263288   0.016854 -15.622  &lt; 2e-16 ***
+## x:2           -0.298104   0.023964 -12.440  &lt; 2e-16 ***
+## wfPresent     -0.139995   0.036418  -3.844 0.000121 ***
+## x:wfPresent:1  0.002191   0.036135   0.061 0.951662    
+## x:wfPresent:2 -0.018388   0.049056  -0.375 0.707780    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Names of linear predictors: logitlink(P[Y&lt;=1]), logitlink(P[Y&lt;=2])
+## 
+## Residual deviance: 37344.43 on 63203 degrees of freedom
+## 
+## Log-likelihood: -18672.21 on 63203 degrees of freedom
+## 
+## Number of Fisher scoring iterations: 4 
+## 
+## No Hauck-Donner effect found in any of the estimates
+## 
+## 
+## Exponentiated coefficients:
+##           x:1           x:2     wfPresent x:wfPresent:1 x:wfPresent:2 
+##     0.7685205     0.7422245     0.8693628     1.0021929     0.9817800</code></pre>
 </div>
 </div>
 </div>
@@ -1455,7 +1487,7 @@ $(document).ready(function ()  {
 
     // establish options
     var options = {
-      selectors: "h1,h2",
+      selectors: "h1,h2,h3",
       theme: "bootstrap3",
       context: '.toc-content',
       hashGenerator: function (text) {
