@@ -1,0 +1,485 @@
+---
+title: "Robust Standard Errors for Clustered Data"
+author: "Steve Brunwasser"
+date: "2025-06-30"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    theme: cosmo
+    code_folding: hide
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=F, warning=F)
+```
+
+# Workspace Prep
+
+Clear the workspace and then load packages we may need.
+```{r packages}
+rm(list=ls())
+require(fungible)
+require(rms)
+require(Hmisc)
+require(ggplot2)
+require(data.table)
+require(infer)
+require(MASS)
+require(lme4)
+require(psychometric)
+require(ordinal)
+require(lmtest)
+require(sandwich)
+require(VGAM)
+require(estimatr)
+```
+
+<br>
+
+# Simulation Study
+
+The purpose of this study is to evaluate the coverage rates for 95% confidence intervals (two-tailed $\alpha=.05$) when fitting linear regressions with robust "sandwich" estimators to clustered data where observations within clusters are non-independent but observations across clusters are independent. 
+
+## Data-Generating Mechanism Equation
+
+The simulated data set is developed based on a two-level mixed-effects model (equations below). The goal is to create a data set that roughly approximates LH's data.
+
+$$
+y_{ij}=\beta_{0j}+\beta_{1j}X_{1ij}+e_{ij}
+$$
+$$
+\beta_{0j}=\gamma_{00}+\gamma_{01}w+u_{0j} 
+$$
+$$
+\beta_{1j}=\gamma_{10}+u_{1j} 
+$$
+
+$$
+\epsilon_{ij} \sim N(0,\sigma^2) 
+$$
+$$
+\begin{bmatrix}
+u_{0j} \cr
+u_{1j}\cr
+\end{bmatrix} 
+\sim ~ N(\begin{bmatrix}
+0 \cr
+0 \cr
+\end{bmatrix}
+,
+\begin{bmatrix}
+\tau_{00} &  \cr
+\tau_{10} & \tau_{11}\cr
+\end{bmatrix}) 
+$$
+
+
+<br>
+
+## Simulate the Population Data
+
+* **y**: Continuous, Gaussian-distributed predictor
+* **x**: Continuous predictor varying within and between clusters (level-1 predictor) 
+* **w**: Continuous predictor constant within  clusters (level-2 predictor) ($r_{x_1,x_2}=.10$)
+* **clusid**: Identifies unique clusters which vary in size between 2 and 8 
+
+<br>
+
+Create cluster ID variable with number of observations per cluster ranging from 2-8 with ~80% of clusters having 2-4 observations 
+```{r simclus, cache=TRUE}
+set.seed(123)
+cluster <- 100000
+id <- factor(rep(1:cluster, sample(2:8, cluster, prob = c(.20, .40, .20, .10, .05, .03, .02), replace = TRUE)))
+```
+
+<br>
+
+Create the x matrix consistent of two "standardized" predictors ($M=0, SD=1$) allowing the two predictors to be correlated ($r=.10$). Below we can see the first 6 rows of the x matrix.
+```{r xmat, cache=TRUE}
+sig.x <- matrix(c(1.0, 0.1,
+                0.1, 1.0),
+              nrow=2)
+
+mn.x <- c(0,0)
+
+set.seed(456)
+xmat <- mvrnorm(n=length(id),
+              mu=mn.x,
+              Sigma=sig.x)
+
+head(xmat)
+```
+
+<br>
+
+
+Transform the x matrix into a data.table and make the second predictor (*w*) into a level-2 predictor that is constant within clusters by replacing individual values with the cluster mean.
+```{r dt, cache=TRUE}
+dt <- data.table(clusid=id, x=xmat[,1], w=xmat[,2])
+x2mn <- dt[, w := mean(w), by = clusid]
+```
+
+<br>
+
+Simulate the variance parameters.
+
+* *e*: Within-cluster error -- $M=0, SD=0.975$
+* *u00*: Random intercept effect -- $M=0, SD=0.75$
+* *u01*: Random slope for x (level-1) predictor effect -- $M=0, SD=0.35$
+
+```{r reff, cache=TRUE}
+set.seed(789)
+dt[, e := rnorm(length(id), mean=0, sd=.975)]
+dt[, int := 0]
+
+set.seed(101112)
+u00 <- rnorm(cluster, mean=0, sd=.75)
+set.seed(131415)
+u01 <- rnorm(cluster, mean=0, sd=.35)
+
+reff <- data.table(clusid = factor(unique(id)), u00, u01)
+```
+
+<br>
+
+* Set the fixed-effects parameters
+* Gather all simulated processes into a data.table (*dt*)
+* Create continuous *y* outcome variable based on fixed & random effects and simulated predictor values
+* Look at the first 20 rows of *dt* -- can see that clusters have different numbers of observations and which variables vary within clusters (level-1; e.g., *x*) and which are constant within clusters (level-2; e.g., *w*)
+```{r yout, cache=TRUE}
+dt <- merge(dt, reff, by = 'clusid')
+
+dt[, b1 := 0.2]
+dt[, b2 := 0.15]
+
+dt[, y := (int+u00) + (b1*x+u01) + (b2*w) + e ]
+
+dt[1:20]
+```
+
+<br>
+
+Make count and ordinal version of the *y* outcome variable reflecting the low rate of outcome occurrence in LH's data. Summarize the variables to be used in analyses. 
+```{r y.ord, cache=TRUE}
+# Create a count outcome mimicking distribution in LH's data
+dt[, y.cnt := cut(y,
+                  breaks = c(quantile(y, 0),
+                             quantile(y, 0.9),
+                             quantile(y, 0.925),
+                             quantile(y, 0.95),
+                             quantile(y, 0.975),
+                             quantile(y, 1)),
+                    labels=F)]
+
+# Create 3-level ordinal outcome
+dt[, y.ord := ordered(cut(y,
+                  breaks = c(quantile(y, 0),
+                             quantile(y, 0.8),
+                             quantile(y, .9),
+                             quantile(y, .975)),
+                    labels=F), levels = 1:3, labels=c('Low','Medium','High'))]
+
+
+dt <- upData(dt, labels=c(x='Continuous Within-Cluster Varying Predictor',
+                    w='Continuous Cluster-Level Predictor',
+                    y='Continous Outcome',
+                    y.cnt='Count Version of Outcome',
+                    y.ord='3-Level Ordinal Version of Outcome'))
+
+html(describe(dt[,c('clusid','x','w','y','y.ord','y.cnt')]))
+
+
+```
+
+<br>
+
+Look at between- & within-cluster variability in $y$ in a random sample of $k=15$ clusters in the population data
+```{r boxplot} 
+set.seed(1)
+boxplot <- ggplot(dt[sample(clusid, 15)], aes(y, clusid)) +
+  geom_boxplot() +
+  labs(y='15 Randomly Selected Clusters'
+       ,x='Continuous y Levels'
+       )
+boxplot
+```
+
+
+<br>
+
+Get population level parameters for effects of *x* and *w*
+
+```{r poppar, cache=TRUE}
+dd <- datadist(dt)
+options(datadist=dd)
+#pop.lin <- ols(y ~ x + w, data = dt)
+#save(pop.lin, file='pop.lin')
+load('pop.lin')
+b1lin <- coef(pop.lin)[2]
+b1lin
+b2lin <- coef(pop.lin)[3]
+b2lin
+```
+
+
+<br>
+
+## Sample Clusters
+Create a list of $s=1,000$ data.tables each sampling $n=9,108$ clusters from the populations data.table. We will then run regression models across all 1,000 samples.  
+
+```{r samplelist, cache=T, cache.lazy = FALSE}
+nsamp <- 1000
+nclus <- 9108
+ 
+ clussampler <- function(data, clusid, nclus, nsamp){
+   dtsamp <- data[sample(unique(clusid), nclus), .SD ]
+ }
+# 
+# set.seed(131416)
+# samplelist <- list()
+#  for(i in 1:nsamp){
+#    sampled <- clussampler(dt, clusid, nclus, nsamp)
+#    samplelist[[i]] <- sampled
+#  }
+# save(samplelist, file='samplelist.RData')
+load('samplelist.RData')
+
+```
+
+<br>
+
+
+## Run Linear Models 
+
+* Use *for()* loop to run simple linear regression model not accounting for dependence due to clustering across the 1,000 samples of n=9,108 clusters created in the prior step
+* Repeat this process using the *lm_robust()* function from the *estimatr* package to obtain robust standard errors -- used lm_robust() because it allows for highly concise code for robust SEs
+* Look at the converage rate for 95% CIs using standard regression and robust regression
+* Using standard regression, coverage rate is poor for the level-2 predictor (*w*) effect but fine for the level-1 predictor (*x*) effect
+* Using robust regression, coverage rate is good for all parameter estimates
+```{r linmods, cache=TRUE}
+set.seed(131417)
+linout <- list()
+for(i in 1:nsamp){
+  out <- lm(y ~ x + w, data = samplelist[[i]])
+  outdt <- data.table(confint(out))
+  linout[[i]] <- outdt
+}
+
+linest = do.call(rbind, linout)
+linest$par <- factor(rep(c('int','b1','b2'), nsamp))
+setnames(linest, old = names(linest), new = c('lci','uci','par'))
+linest[, b1 := b1lin]
+linest[, b2 := b2lin]
+
+linest[par=='b1', cover := factor(between(b1, lci, uci))]
+linest[par=='b2', cover := factor(between(b2, lci, uci))]
+linest <- linest[par!='int',]
+
+set.seed(131418)
+linrobout <- list()
+for(i in 1:nsamp){
+  out <- lm_robust(y ~ x + w, data = samplelist[[i]], se_type = "stata", clusters = clusid)
+  outdt <- data.table(confint(out))
+  linrobout[[i]] <- outdt
+}
+
+linrobest = do.call(rbind, linrobout)
+linrobest$par <- factor(rep(c('int','b1','b2'), nsamp))
+setnames(linrobest, old = names(linrobest), new = c('lci','uci','par'))
+linrobest[, b1 := b1lin]
+linrobest[, b2 := b2lin]
+
+linrobest[par=='b1', cover := factor(between(b1, lci, uci))]
+linrobest[par=='b2', cover := factor(between(b2, lci, uci))]
+linrobest <- linrobest[par!='int',]
+
+
+linestboth <- rbind(linest, linrobest)
+linestboth$model <- factor(rep(c('Standard','Robust'), each=2000))
+label(linestboth$cover) <- 'Does CI cover true parameter?'
+label(linestboth$model) <- 'Model SE estimation type'
+label(linestboth$par) <- 'Parameter'
+
+html(summaryM(cover ~ par+model, data=linestboth))
+
+save(linest, file='linest.RData')
+save(linest, file='linrobest.RData')
+load('linest.RData')
+load('linrobest.RData')
+```
+
+<br>
+<br>
+
+# Clustered Ordinal Logistic Example
+
+Below is an example of how to conduct ordinal logistic regression using a data set that approximates LH's real data.
+
+## Data Prep
+
+* Select just the first data.table from *samplelist* used in the simulation study above to conduct the analyses ($c=9,108$ clusters & $N=32,428$ observations)
+* Make a unbalanced binary version of the level-2 predictor (*w*) treated as a factor (*wf*) with levels: 0=absent, 1=present with 80% of responses assigned to the reference category ("Absent") 
+```{r ordprep, cache=TRUE}
+dt1 <- samplelist[[1]]
+dt1[, wf := factor(ifelse(w > quantile(w, 0.8), 1, 0), levels=0:1, labels=c('Absent','Present'))]
+
+```
+
+
+<br>
+<br>
+
+## Ordinal Logistic Regression
+
+Fit a proportional odds logistic regression models using the *polr()* function from the **MASS** package and then using the *lrm()* function in the **rms** package. We'll compare results of the two. 
+
+### polr() function
+
+* Fit ordinal logistic regression assuming proportional odds ignoring clustering 
+* Confidence intervals are calculated using profile likelihood method
+```{r ord1, cache=TRUE}
+ord1 <- polr(factor(y.ord) ~ x*wf, data = dt1, Hess = TRUE)
+ord1.or <- data.table(exp(coef(ord1)))
+ord1ci <- data.table(exp(confint(ord1)))
+data.table(Predictor=c('x','wf','x:wf'), "Odds Ratio"=ord1.or, ord1ci)
+```
+
+<br>
+
+* Refit the model accounting for non-independence due to clustering within families using the *coeftest()* function from **lmtest** package in conjunction with the **sandwich** package functions *vcovCL()* 
+* Confidence intervals are mildly wider when using robust standard errors, particularly for the *wf* level-2 predictor
+```{r ord1propodds, cache=TRUE}
+ord1coef.rob <- coeftest(ord1, vcov=vcovCL(ord1, factor(dt1$clusid) ))
+ord1or.rob <- exp(ord1coef.rob)
+ord1or.rob.ci <- exp(confint(ord1coef.rob))
+data.table(Predictor=c('x','wf','x:wf'), "Odds Ratio"= ord1or.rob[,1], ord1or.rob.ci)
+```
+
+<br>
+
+### lrm() function
+
+Fitting with the *lrm()* function is beneficial as we can take advantage of the many features of the **rms** package, especially the *impactPO* function to evaluate the consequences of violation of the proportional odds assumption. 
+
+<br>
+
+* Set the data distribution to allow for use of helpful **rms** functions
+* Will be helpful later for plotting and testing proportional odds assumption
+```{r dd, cache=TRUE}
+dd <- datadist(dt1)
+options(datadist=dd)
+```
+
+<br>
+
+* Fit the same proportional odds regression model previously fit with the *polr()* function 
+* Obtain robust standard errors using the **robcov()** function after fitting the model
+* Odds ratio confidence intervals are same to several decimal places as those obtained with *polr()* in conjunction with the **sandwich** package
+
+```{r lrm1, cache=TRUE}
+lrm1 <- lrm(y.ord ~ x*wf, data = dt1, x=T, y=T)
+lrm1rob <- robcov(lrm1, cluster=dt1$clusid)
+summary(lrm1rob, x=c(0,1))
+```
+
+<br>
+
+Plot the conditional odds ratios for the two predictors
+```{r lrm1orplot}
+plot(summary(lrm1rob, wf, x=c(0,1)))
+```
+<br>
+
+* Plot the model-predicted probabilities of being in higher levels of the ordinal outcome
+* Prediction across all values of *x* by levels of *wf*
+```{r lrm1predplot}
+ggplot(Predict(lrm1, x, wf, kint = 1, fun = plogis)) +
+  labs(x='Levels of Level-1 Predictor (x)',
+       y='Predicted Probability',
+       title='Model-Predicted Probability of Being in the "Medium" Outcome Category')
+
+ggplot(Predict(lrm1, x, wf, kint = 2, fun = plogis)) +
+  labs(x='Levels of Level-1 Predictor (x)',
+       y='Predicted Probability',
+       title='Model-Predicted Probability of Being in the "High" Outcome Category')
+```
+
+<br>
+
+### Evaluate Proportional Odds Assumption
+
+In this section, we use ![procedures](https://www.fharrell.com/post/impactpo/) described by Harrell to evaluate the impact of potential proportional odds (PO) assumption violations. This involves comparing the PO model to a partial PO model (relax PO assumption for subset of predictors) and multinomial logistic model (don't assume PO for any predictors). As described by Harrell, it is important to weight the potential benefits of relaxing/eliminating the PO assumption against the drawbacks of added model complexity, overfitting, & poor model performance in future data sets.  
+
+<br>
+
+* Create a new data frame to house predicted values based on our 3 types of logistic regression models: PO, partial PO, and multinomial
+* Allow levels of both *x* and *wf* to vary, with predicted probabilities calculated at 1st (-0.668), 2nd (0.001), & 3rd quartiles (0.684) of *x* and both levels of *wf* (absent & present) 
+* Results in six predicted values across combinations of *x* and *wf*
+* View the 6 combinations of predictor values
+* Note, might make sense to use more values of *x* but just using 3 here for demonstration purposes
+```{r popred, cache=TRUE}
+pred <- expand.grid(x=c(quantile(dt1$x, 0.25),
+                        quantile(dt1$x, 0.5),
+                        quantile(dt1$x, 0.75)),
+                    wf=levels(dt1$wf))
+pred
+
+
+
+```
+
+<br>
+
+
+* Use the *impactPO()* function to calculate predicted probabilities for *y.ord* at various levels of predictors stored in the *pred* data frame from the prior step
+* Relax PO assumption for *wf* predictor specifically
+* Use 500 bootstrap samples to calculate percentile confidence intervals for difference in predicted values across the 3 different logistic models -- sig differences would be indicative of violation of proportional odds assumption
+```{r poimp}
+# poimp <- impactPO(y.ord ~ x*wf, nonpo = ~ wf,
+#               data=dt1, newdata=pred, B=500)
+# save(poimp, file='poimp.RData')
+load('poimp.RData')
+poimp
+
+```
+
+* Mean differences across PO to partial PO and PO to multinomial are small
+* A number of differences in predictions at specific combinations of *x* and *wf* are statistically significant  
+* R^2 values across the three methods are indistinguishable
+* Non-significant diff between PO and partial PO relaxing the PO assumption for *wf*
+* Borderline significant improvement of multinomial model over PO (p=.047) -- potential indication that PO assumption is less viable for effect of *x* than for *wf*
+* AIC slightly favors partial PO and multinomial models
+* Overall, seems like the benefits of partial PO model relaxing PO assumption for effect of *wf* is not worth the added complexity even though AIC is tiny bit better for partial PO (37360.10) compared to PO (37360.30) model
+
+<br>
+
+* As there was some indication that the multinomial model was best in the *impactPO()* analysis and the benefits of relaxing the PO assumption for *wf* were minuscule at best, rerun the *impactPO()* model comparing the PO model to a partial PO model relaxing the PO assumption only for the effect of *x*. 
+* No need to compare to the multinomial model again, so use the *relax='ppo'* argument so that the function does not needlessly rerun the multinomial model  
+```{r poimp1}
+# poimp1 <- impactPO(y.ord ~ x*wf, nonpo = ~ x, relax = 'ppo',
+#               data=dt1, newdata=pred, B=500)
+# save(poimp1, file='poimp1.RData')
+load('poimp1.RData')
+poimp1
+```
+
+* Partial PO model with no PO assumption for *x* effect is statistically significantly better than the PO model (for what that's worth)
+* AIC favors the partial PO model too
+
+<br>
+
+### Partial PO Model
+
+* Based on the results of the *impactPO()* analyses, fit a partial PO model assuming PO for the effect of *wf* but NOT for *x*
+* As effect of *x* is modeled to interact with *wf* and we are allowing separate effects of *x* for crossing the two *y.ord* thresholds, also relax PO assumption for the interaction -- i.e., allow effect of interaction be different for moving across threshold separating "low" and "medium" and threshold separating "medium" and "high"
+* Note that there is only one effect estimate for *wf* because we assume that the effect of *wf* on moving across the first and second thresholds is the same (PO assumption)
+* There are two effects for *x* and the $x*wf$ interaction as we do NOT assume the effect is constant across thresholds of *y.ord*
+```{r vglm1, cache=TRUE}
+vglm1 <- vglm(y.ord ~ x*wf, family=cumulative(parallel=FALSE~x+x:wf), data=dt1)
+summary(vglm1)
+```
+
+
