@@ -21,16 +21,12 @@ knitr::opts_chunk$set(echo = TRUE, message=F, warning=F)
 Clear the workspace and then load packages we may need.
 ```{r packages}
 rm(list=ls())
-require(fungible)
 require(rms)
 require(Hmisc)
 require(ggplot2)
 require(data.table)
-require(infer)
 require(MASS)
 require(lme4)
-require(psychometric)
-require(ordinal)
 require(lmtest)
 require(sandwich)
 require(VGAM)
@@ -128,8 +124,9 @@ x2mn <- dt[, w := mean(w), by = clusid]
 Simulate the variance parameters.
 
 * *e*: Within-cluster error -- $M=0, SD=0.975$
-* *u00*: Random intercept effect -- $M=0, SD=0.75$
-* *u01*: Random slope for x (level-1) predictor effect -- $M=0, SD=0.35$
+* *u0*: Random intercept effect -- $M=0, SD=0.75$
+* *u1*: Random slope for x (level-1) predictor effect -- $M=0, SD=0.35$
+* Look at first 6 rows of the random effects
 
 ```{r reff, cache=TRUE}
 set.seed(789)
@@ -137,11 +134,12 @@ dt[, e := rnorm(length(id), mean=0, sd=.975)]
 dt[, int := 0]
 
 set.seed(101112)
-u00 <- rnorm(cluster, mean=0, sd=.75)
+u0 <- rnorm(cluster, mean=0, sd=.75)
 set.seed(131415)
-u01 <- rnorm(cluster, mean=0, sd=.35)
+u1 <- rnorm(cluster, mean=0, sd=.35)
 
-reff <- data.table(clusid = factor(unique(id)), u00, u01)
+reff <- data.table(clusid = factor(unique(id)), u0, u1)
+head(reff)
 ```
 
 <br>
@@ -153,10 +151,10 @@ reff <- data.table(clusid = factor(unique(id)), u00, u01)
 ```{r yout, cache=TRUE}
 dt <- merge(dt, reff, by = 'clusid')
 
-dt[, b1 := 0.2]
-dt[, b2 := 0.15]
+dt[, gamma10 := 0.2]
+dt[, gamma01 := 0.15]
 
-dt[, y := (int+u00) + (b1*x+u01) + (b2*w) + e ]
+dt[, y := (int+u0) + x*(gamma10+u1) + (gamma01*w) + e ]
 
 dt[1:20]
 ```
@@ -208,6 +206,18 @@ boxplot <- ggplot(dt[sample(clusid, 15)], aes(y, clusid)) +
 boxplot
 ```
 
+<br>
+
+* Calculate the intraclass correlation coefficient (ICC) for the population data for *y* values nested within *clusid*
+* ~ 34% of the total variance in *y* is between clusters 
+```{r icc}
+lmer1 <- lmer(y ~ 1 + (1 | clusid), data = dt)
+vc <- as.data.table(VarCorr(lmer1))
+
+(icc <- data.table(ICC=vc[1,4]/(vc[1,4]+vc[2,4])))
+```
+
+
 
 <br>
 
@@ -219,10 +229,10 @@ options(datadist=dd)
 #pop.lin <- ols(y ~ x + w, data = dt)
 #save(pop.lin, file='pop.lin')
 load('pop.lin')
-b1lin <- coef(pop.lin)[2]
-b1lin
-b2lin <- coef(pop.lin)[3]
-b2lin
+gamma10lin <- coef(pop.lin)[2]
+gamma10lin
+gamma01lin <- coef(pop.lin)[3]
+gamma01lin
 ```
 
 
@@ -258,7 +268,7 @@ load('samplelist.RData')
 * Use *for()* loop to run simple linear regression model not accounting for dependence due to clustering across the 1,000 samples of n=9,108 clusters created in the prior step
 * Repeat this process using the *lm_robust()* function from the *estimatr* package to obtain robust standard errors -- used lm_robust() because it allows for highly concise code for robust SEs
 * Look at the converage rate for 95% CIs using standard regression and robust regression
-* Using standard regression, coverage rate is poor for the level-2 predictor (*w*) effect but fine for the level-1 predictor (*x*) effect
+* Using standard regression, coverage rate is poor for the level-2 predictor (*w*; $\gamma_{01}$) effect but fine for the level-1 predictor (*x*; $\gamma_{10}$) effect
 * Using robust regression, coverage rate is good for all parameter estimates
 ```{r linmods, cache=TRUE}
 set.seed(131417)
@@ -270,13 +280,13 @@ for(i in 1:nsamp){
 }
 
 linest = do.call(rbind, linout)
-linest$par <- factor(rep(c('int','b1','b2'), nsamp))
+linest$par <- factor(rep(c('int','gamma10','gamma01'), nsamp))
 setnames(linest, old = names(linest), new = c('lci','uci','par'))
-linest[, b1 := b1lin]
-linest[, b2 := b2lin]
+linest[, gamma10 := gamma10lin]
+linest[, gamma01 := gamma01lin]
 
-linest[par=='b1', cover := factor(between(b1, lci, uci))]
-linest[par=='b2', cover := factor(between(b2, lci, uci))]
+linest[par=='gamma10', cover := factor(between(gamma10, lci, uci))]
+linest[par=='gamma01', cover := factor(between(gamma01, lci, uci))]
 linest <- linest[par!='int',]
 
 set.seed(131418)
@@ -288,13 +298,13 @@ for(i in 1:nsamp){
 }
 
 linrobest = do.call(rbind, linrobout)
-linrobest$par <- factor(rep(c('int','b1','b2'), nsamp))
+linrobest$par <- factor(rep(c('int','gamma10','gamma01'), nsamp))
 setnames(linrobest, old = names(linrobest), new = c('lci','uci','par'))
-linrobest[, b1 := b1lin]
-linrobest[, b2 := b2lin]
+linrobest[, gamma10 := gamma10lin]
+linrobest[, gamma01 := gamma01lin]
 
-linrobest[par=='b1', cover := factor(between(b1, lci, uci))]
-linrobest[par=='b2', cover := factor(between(b2, lci, uci))]
+linrobest[par=='gamma10', cover := factor(between(gamma10, lci, uci))]
+linrobest[par=='gamma01', cover := factor(between(gamma01, lci, uci))]
 linrobest <- linrobest[par!='int',]
 
 
@@ -410,7 +420,7 @@ ggplot(Predict(lrm1, x, wf, kint = 2, fun = plogis)) +
 
 <br>
 
-### Evaluate Proportional Odds Assumption
+### Proportional Odds Assumption
 
 In this section, we use [procedures](https://www.fharrell.com/post/impactpo/) described by Harrell to evaluate the impact of potential proportional odds (PO) assumption violations. This involves comparing the PO model to a partial PO model (relax PO assumption for subset of predictors) and multinomial logistic model (don't assume PO for any predictors). As described by Harrell, it is important to weight the potential benefits of relaxing/eliminating the PO assumption against the drawbacks of added model complexity, overfitting, & poor model performance in future data sets.  
 

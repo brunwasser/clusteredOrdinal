@@ -457,21 +457,17 @@ Data</h1>
 <h1>Workspace Prep</h1>
 <p>Clear the workspace and then load packages we may need.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">rm</span>(<span class="at">list=</span><span class="fu">ls</span>())</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">require</span>(fungible)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">require</span>(rms)</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">require</span>(Hmisc)</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">require</span>(ggplot2)</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">require</span>(data.table)</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">require</span>(infer)</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">require</span>(MASS)</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">require</span>(lme4)</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">require</span>(psychometric)</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">require</span>(ordinal)</span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">require</span>(lmtest)</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="fu">require</span>(sandwich)</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="fu">require</span>(VGAM)</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="fu">require</span>(estimatr)</span></code></pre></div>
-<p><br></p>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">require</span>(rms)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">require</span>(Hmisc)</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">require</span>(ggplot2)</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">require</span>(data.table)</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">require</span>(MASS)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="fu">require</span>(lme4)</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">require</span>(lmtest)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="fu">require</span>(sandwich)</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="fu">require</span>(VGAM)</span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">require</span>(estimatr)</span></code></pre></div>
+<p><br> <br></p>
 </div>
 <div id="simulation-study" class="section level1">
 <h1>Simulation Study</h1>
@@ -566,21 +562,31 @@ clusters by replacing individual values with the cluster mean.</p>
 <ul>
 <li><em>e</em>: Within-cluster error – <span class="math inline">\(M=0,
 SD=0.975\)</span></li>
-<li><em>u00</em>: Random intercept effect – <span
+<li><em>u0</em>: Random intercept effect – <span
 class="math inline">\(M=0, SD=0.75\)</span></li>
-<li><em>u01</em>: Random slope for x (level-1) predictor effect – <span
+<li><em>u1</em>: Random slope for x (level-1) predictor effect – <span
 class="math inline">\(M=0, SD=0.35\)</span></li>
+<li>Look at first 6 rows of the random effects</li>
 </ul>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">789</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>dt[, e <span class="sc">:=</span> <span class="fu">rnorm</span>(<span class="fu">length</span>(id), <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span>.<span class="dv">975</span>)]</span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>dt[, int <span class="sc">:=</span> <span class="dv">0</span>]</span>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">101112</span>)</span>
-<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>u00 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(cluster, <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span>.<span class="dv">75</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>u0 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(cluster, <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span>.<span class="dv">75</span>)</span>
 <span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">131415</span>)</span>
-<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>u01 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(cluster, <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span>.<span class="dv">35</span>)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>u1 <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(cluster, <span class="at">mean=</span><span class="dv">0</span>, <span class="at">sd=</span>.<span class="dv">35</span>)</span>
 <span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>reff <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">clusid =</span> <span class="fu">factor</span>(<span class="fu">unique</span>(id)), u00, u01)</span></code></pre></div>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>reff <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">clusid =</span> <span class="fu">factor</span>(<span class="fu">unique</span>(id)), u0, u1)</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="fu">head</span>(reff)</span></code></pre></div>
+<pre><code>##    clusid         u0         u1
+##    &lt;fctr&gt;      &lt;num&gt;      &lt;num&gt;
+## 1:      1 -0.5691497 -0.1290604
+## 2:      2  1.0151986  0.3698953
+## 3:      3 -0.1508028  0.3927092
+## 4:      4 -0.3301558 -0.3453259
+## 5:      5  0.9730025 -0.4427058
+## 6:      6 -1.3347952 -0.5190537</code></pre>
 <p><br></p>
 <ul>
 <li>Set the fixed-effects parameters</li>
@@ -592,92 +598,92 @@ have different numbers of observations and which variables vary within
 clusters (level-1; e.g., <em>x</em>) and which are constant within
 clusters (level-2; e.g., <em>w</em>)</li>
 </ul>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">merge</span>(dt, reff, <span class="at">by =</span> <span class="st">&#39;clusid&#39;</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>dt[, b1 <span class="sc">:=</span> <span class="fl">0.2</span>]</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>dt[, b2 <span class="sc">:=</span> <span class="fl">0.15</span>]</span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>dt[, y <span class="sc">:=</span> (int<span class="sc">+</span>u00) <span class="sc">+</span> (b1<span class="sc">*</span>x<span class="sc">+</span>u01) <span class="sc">+</span> (b2<span class="sc">*</span>w) <span class="sc">+</span> e ]</span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>dt[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>]</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">merge</span>(dt, reff, <span class="at">by =</span> <span class="st">&#39;clusid&#39;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>dt[, gamma10 <span class="sc">:=</span> <span class="fl">0.2</span>]</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>dt[, gamma01 <span class="sc">:=</span> <span class="fl">0.15</span>]</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>dt[, y <span class="sc">:=</span> (int<span class="sc">+</span>u0) <span class="sc">+</span> x<span class="sc">*</span>(gamma10<span class="sc">+</span>u1) <span class="sc">+</span> (gamma01<span class="sc">*</span>w) <span class="sc">+</span> e ]</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>dt[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>]</span></code></pre></div>
 <pre><code>## Key: &lt;clusid&gt;
-##     clusid           x          w           e   int        u00        u01    b1
-##     &lt;fctr&gt;       &lt;num&gt;      &lt;num&gt;       &lt;num&gt; &lt;num&gt;      &lt;num&gt;      &lt;num&gt; &lt;num&gt;
-##  1:      1 -0.57356654 -0.3507173  0.51099429     0 -0.5691497 -0.1290604   0.2
-##  2:      1  0.59663105 -0.3507173 -2.20424869     0 -0.5691497 -0.1290604   0.2
-##  3:      1  1.14645434 -0.3507173 -0.01918773     0 -0.5691497 -0.1290604   0.2
-##  4:      2  0.23538809 -2.0766850  0.17856140     0  1.0151986  0.3698953   0.2
-##  5:      2  0.79835901 -2.0766850 -0.35231769     0  1.0151986  0.3698953   0.2
-##  6:      3 -0.30134226  0.7952887 -0.47237189     0 -0.1508028  0.3927092   0.2
-##  7:      3  0.04424577  0.7952887 -0.64965512     0 -0.1508028  0.3927092   0.2
-##  8:      3 -0.94178065  0.7952887 -0.17010755     0 -0.1508028  0.3927092   0.2
-##  9:      3  0.42721876  0.7952887 -0.98568568     0 -0.1508028  0.3927092   0.2
-## 10:      4  1.25698276  0.5782601  0.72120366     0 -0.3301558 -0.3453259   0.2
-## 11:      4 -1.07276544  0.5782601 -0.39223890     0 -0.3301558 -0.3453259   0.2
-## 12:      4  1.37587995  0.5782601 -0.97771082     0 -0.3301558 -0.3453259   0.2
-## 13:      4 -0.17322520  0.5782601 -0.17327623     0 -0.3301558 -0.3453259   0.2
-## 14:      4  1.07806816  0.5782601 -0.47570207     0 -0.3301558 -0.3453259   0.2
-## 15:      5 -1.18769440  1.0820545  0.90470971     0  0.9730025 -0.4427058   0.2
-## 16:      5  1.76136364  1.0820545 -0.75506459     0  0.9730025 -0.4427058   0.2
-## 17:      5 -0.57422632  1.0820545  0.41229935     0  0.9730025 -0.4427058   0.2
-## 18:      5  0.85133481  1.0820545 -0.59178930     0  0.9730025 -0.4427058   0.2
-## 19:      5  1.30979188  1.0820545  0.20414060     0  0.9730025 -0.4427058   0.2
-## 20:      5  0.91234981  1.0820545 -0.75790376     0  0.9730025 -0.4427058   0.2
-##     clusid           x          w           e   int        u00        u01    b1
-##        b2            y
-##     &lt;num&gt;        &lt;num&gt;
-##  1:  0.15 -0.354536692
-##  2:  0.15 -2.835740154
-##  3:  0.15 -0.540714535
-##  4:  0.15  1.299230158
-##  5:  0.15  0.880945251
-##  6:  0.15 -0.171440638
-##  7:  0.15 -0.279606263
-##  8:  0.15  0.002736029
-##  9:  0.15 -0.539042218
-## 10:  0.15  0.383857443
-## 11:  0.15 -1.195534750
-## 12:  0.15 -1.291277590
-## 13:  0.15 -0.796664030
-## 14:  0.15 -0.848831206
-## 15:  0.15  1.359775641
-## 16:  0.15  0.289812949
-## 17:  0.15  0.990058898
-## 18:  0.15  0.271082472
-## 19:  0.15  1.158703794
-## 20:  0.15  0.117171017
-##        b2            y</code></pre>
+##     clusid           x          w           e   int         u0         u1
+##     &lt;fctr&gt;       &lt;num&gt;      &lt;num&gt;       &lt;num&gt; &lt;num&gt;      &lt;num&gt;      &lt;num&gt;
+##  1:      1 -0.57356654 -0.3507173  0.51099429     0 -0.5691497 -0.1290604
+##  2:      1  0.59663105 -0.3507173 -2.20424869     0 -0.5691497 -0.1290604
+##  3:      1  1.14645434 -0.3507173 -0.01918773     0 -0.5691497 -0.1290604
+##  4:      2  0.23538809 -2.0766850  0.17856140     0  1.0151986  0.3698953
+##  5:      2  0.79835901 -2.0766850 -0.35231769     0  1.0151986  0.3698953
+##  6:      3 -0.30134226  0.7952887 -0.47237189     0 -0.1508028  0.3927092
+##  7:      3  0.04424577  0.7952887 -0.64965512     0 -0.1508028  0.3927092
+##  8:      3 -0.94178065  0.7952887 -0.17010755     0 -0.1508028  0.3927092
+##  9:      3  0.42721876  0.7952887 -0.98568568     0 -0.1508028  0.3927092
+## 10:      4  1.25698276  0.5782601  0.72120366     0 -0.3301558 -0.3453259
+## 11:      4 -1.07276544  0.5782601 -0.39223890     0 -0.3301558 -0.3453259
+## 12:      4  1.37587995  0.5782601 -0.97771082     0 -0.3301558 -0.3453259
+## 13:      4 -0.17322520  0.5782601 -0.17327623     0 -0.3301558 -0.3453259
+## 14:      4  1.07806816  0.5782601 -0.47570207     0 -0.3301558 -0.3453259
+## 15:      5 -1.18769440  1.0820545  0.90470971     0  0.9730025 -0.4427058
+## 16:      5  1.76136364  1.0820545 -0.75506459     0  0.9730025 -0.4427058
+## 17:      5 -0.57422632  1.0820545  0.41229935     0  0.9730025 -0.4427058
+## 18:      5  0.85133481  1.0820545 -0.59178930     0  0.9730025 -0.4427058
+## 19:      5  1.30979188  1.0820545  0.20414060     0  0.9730025 -0.4427058
+## 20:      5  0.91234981  1.0820545 -0.75790376     0  0.9730025 -0.4427058
+##     clusid           x          w           e   int         u0         u1
+##     gamma10 gamma01           y
+##       &lt;num&gt;   &lt;num&gt;       &lt;num&gt;
+##  1:     0.2    0.15 -0.15145160
+##  2:     0.2    0.15 -2.78368120
+##  3:     0.2    0.15 -0.55961599
+##  4:     0.2    0.15  1.01640382
+##  5:     0.2    0.15  0.80635920
+##  6:     0.2    0.15 -0.68248969
+##  7:     0.2    0.15 -0.65493973
+##  8:     0.2    0.15 -0.75981906
+##  9:     0.2    0.15 -0.76397867
+## 10:     0.2    0.15  0.29511463
+## 11:     0.2    0.15 -0.47975508
+## 12:     0.2    0.15 -1.42107869
+## 13:     0.2    0.15 -0.39151894
+## 14:     0.2    0.15 -0.87579017
+## 15:     0.2    0.15  2.32828074
+## 16:     0.2    0.15 -0.04724718
+## 17:     0.2    0.15  1.68697809
+## 18:     0.2    0.15  0.33689742
+## 19:     0.2    0.15  1.02155712
+## 20:     0.2    0.15  0.15597427
+##     gamma10 gamma01           y</code></pre>
 <p><br></p>
 <p>Make count and ordinal version of the <em>y</em> outcome variable
 reflecting the low rate of outcome occurrence in LH’s data. Summarize
 the variables to be used in analyses.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Create a count outcome mimicking distribution in LH&#39;s data</span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>dt[, y.cnt <span class="sc">:=</span> <span class="fu">cut</span>(y,</span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>                  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">quantile</span>(y, <span class="dv">0</span>),</span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.9</span>),</span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.925</span>),</span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.95</span>),</span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.975</span>),</span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="dv">1</span>)),</span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>                    <span class="at">labels=</span>F)]</span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a></span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co"># Create 3-level ordinal outcome</span></span>
-<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>dt[, y.ord <span class="sc">:=</span> <span class="fu">ordered</span>(<span class="fu">cut</span>(y,</span>
-<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>                  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">quantile</span>(y, <span class="dv">0</span>),</span>
-<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.8</span>),</span>
-<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, .<span class="dv">9</span>),</span>
-<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, .<span class="dv">975</span>)),</span>
-<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>                    <span class="at">labels=</span>F), <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">labels=</span><span class="fu">c</span>(<span class="st">&#39;Low&#39;</span>,<span class="st">&#39;Medium&#39;</span>,<span class="st">&#39;High&#39;</span>))]</span>
-<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a></span>
-<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a></span>
-<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">upData</span>(dt, <span class="at">labels=</span><span class="fu">c</span>(<span class="at">x=</span><span class="st">&#39;Continuous Within-Cluster Varying Predictor&#39;</span>,</span>
-<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>                    <span class="at">w=</span><span class="st">&#39;Continuous Cluster-Level Predictor&#39;</span>,</span>
-<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>                    <span class="at">y=</span><span class="st">&#39;Continous Outcome&#39;</span>,</span>
-<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>                    <span class="at">y.cnt=</span><span class="st">&#39;Count Version of Outcome&#39;</span>,</span>
-<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>                    <span class="at">y.ord=</span><span class="st">&#39;3-Level Ordinal Version of Outcome&#39;</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="co"># Create a count outcome mimicking distribution in LH&#39;s data</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>dt[, y.cnt <span class="sc">:=</span> <span class="fu">cut</span>(y,</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>                  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">quantile</span>(y, <span class="dv">0</span>),</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.9</span>),</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.925</span>),</span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.95</span>),</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.975</span>),</span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="dv">1</span>)),</span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a>                    <span class="at">labels=</span>F)]</span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" tabindex="-1"></a><span class="co"># Create 3-level ordinal outcome</span></span>
+<span id="cb10-12"><a href="#cb10-12" tabindex="-1"></a>dt[, y.ord <span class="sc">:=</span> <span class="fu">ordered</span>(<span class="fu">cut</span>(y,</span>
+<span id="cb10-13"><a href="#cb10-13" tabindex="-1"></a>                  <span class="at">breaks =</span> <span class="fu">c</span>(<span class="fu">quantile</span>(y, <span class="dv">0</span>),</span>
+<span id="cb10-14"><a href="#cb10-14" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, <span class="fl">0.8</span>),</span>
+<span id="cb10-15"><a href="#cb10-15" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, .<span class="dv">9</span>),</span>
+<span id="cb10-16"><a href="#cb10-16" tabindex="-1"></a>                             <span class="fu">quantile</span>(y, .<span class="dv">975</span>)),</span>
+<span id="cb10-17"><a href="#cb10-17" tabindex="-1"></a>                    <span class="at">labels=</span>F), <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">labels=</span><span class="fu">c</span>(<span class="st">&#39;Low&#39;</span>,<span class="st">&#39;Medium&#39;</span>,<span class="st">&#39;High&#39;</span>))]</span>
+<span id="cb10-18"><a href="#cb10-18" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" tabindex="-1"></a>dt <span class="ot">&lt;-</span> <span class="fu">upData</span>(dt, <span class="at">labels=</span><span class="fu">c</span>(<span class="at">x=</span><span class="st">&#39;Continuous Within-Cluster Varying Predictor&#39;</span>,</span>
+<span id="cb10-21"><a href="#cb10-21" tabindex="-1"></a>                    <span class="at">w=</span><span class="st">&#39;Continuous Cluster-Level Predictor&#39;</span>,</span>
+<span id="cb10-22"><a href="#cb10-22" tabindex="-1"></a>                    <span class="at">y=</span><span class="st">&#39;Continous Outcome&#39;</span>,</span>
+<span id="cb10-23"><a href="#cb10-23" tabindex="-1"></a>                    <span class="at">y.cnt=</span><span class="st">&#39;Count Version of Outcome&#39;</span>,</span>
+<span id="cb10-24"><a href="#cb10-24" tabindex="-1"></a>                    <span class="at">y.ord=</span><span class="st">&#39;3-Level Ordinal Version of Outcome&#39;</span>))</span></code></pre></div>
 <pre><code>## Input object size:    36382040 bytes;     12 variables    356875 observations
 ## New object size: 34957096 bytes; 12 variables    356875 observations</code></pre>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">html</span>(<span class="fu">describe</span>(dt[,<span class="fu">c</span>(<span class="st">&#39;clusid&#39;</span>,<span class="st">&#39;x&#39;</span>,<span class="st">&#39;w&#39;</span>,<span class="st">&#39;y&#39;</span>,<span class="st">&#39;y.ord&#39;</span>,<span class="st">&#39;y.cnt&#39;</span>)]))</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">html</span>(<span class="fu">describe</span>(dt[,<span class="fu">c</span>(<span class="st">&#39;clusid&#39;</span>,<span class="st">&#39;x&#39;</span>,<span class="st">&#39;w&#39;</span>,<span class="st">&#39;y&#39;</span>,<span class="st">&#39;y.ord&#39;</span>,<span class="st">&#39;y.cnt&#39;</span>)]))</span></code></pre></div>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 <style>
@@ -828,28 +834,41 @@ For the frequency table, variable is rounded to the nearest 0
 <p>Look at between- &amp; within-cluster variability in <span
 class="math inline">\(y\)</span> in a random sample of <span
 class="math inline">\(k=15\)</span> clusters in the population data</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>boxplot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dt[<span class="fu">sample</span>(clusid, <span class="dv">15</span>)], <span class="fu">aes</span>(y, clusid)) <span class="sc">+</span></span>
-<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y=</span><span class="st">&#39;15 Randomly Selected Clusters&#39;</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>       ,<span class="at">x=</span><span class="st">&#39;Continuous y Levels&#39;</span></span>
-<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>       )</span>
-<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>boxplot</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>boxplot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(dt[<span class="fu">sample</span>(clusid, <span class="dv">15</span>)], <span class="fu">aes</span>(y, clusid)) <span class="sc">+</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>() <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">y=</span><span class="st">&#39;15 Randomly Selected Clusters&#39;</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>       ,<span class="at">x=</span><span class="st">&#39;Continuous y Levels&#39;</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>       )</span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>boxplot</span></code></pre></div>
 <p><img src="index_files/figure-html/boxplot-1.png" width="672" /></p>
+<p><br></p>
+<ul>
+<li>Calculate the intraclass correlation coefficient (ICC) for the
+population data for <em>y</em> values nested within <em>clusid</em></li>
+<li>~ 34% of the total variance in <em>y</em> is between clusters</li>
+</ul>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a>lmer1 <span class="ot">&lt;-</span> <span class="fu">lmer</span>(y <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> clusid), <span class="at">data =</span> dt)</span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>vc <span class="ot">&lt;-</span> <span class="fu">as.data.table</span>(<span class="fu">VarCorr</span>(lmer1))</span>
+<span id="cb14-3"><a href="#cb14-3" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" tabindex="-1"></a>(icc <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="at">ICC=</span>vc[<span class="dv">1</span>,<span class="dv">4</span>]<span class="sc">/</span>(vc[<span class="dv">1</span>,<span class="dv">4</span>]<span class="sc">+</span>vc[<span class="dv">2</span>,<span class="dv">4</span>])))</span></code></pre></div>
+<pre><code>##     ICC.vcov
+##        &lt;num&gt;
+## 1: 0.4134371</code></pre>
 <p><br></p>
 <p>Get population level parameters for effects of <em>x</em> and
 <em>w</em></p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a>dd <span class="ot">&lt;-</span> <span class="fu">datadist</span>(dt)</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="fu">options</span>(<span class="at">datadist=</span>dd)</span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#pop.lin &lt;- ols(y ~ x + w, data = dt)</span></span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#save(pop.lin, file=&#39;pop.lin&#39;)</span></span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;pop.lin&#39;</span>)</span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>b1lin <span class="ot">&lt;-</span> <span class="fu">coef</span>(pop.lin)[<span class="dv">2</span>]</span>
-<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>b1lin</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" tabindex="-1"></a>dd <span class="ot">&lt;-</span> <span class="fu">datadist</span>(dt)</span>
+<span id="cb16-2"><a href="#cb16-2" tabindex="-1"></a><span class="fu">options</span>(<span class="at">datadist=</span>dd)</span>
+<span id="cb16-3"><a href="#cb16-3" tabindex="-1"></a><span class="co">#pop.lin &lt;- ols(y ~ x + w, data = dt)</span></span>
+<span id="cb16-4"><a href="#cb16-4" tabindex="-1"></a><span class="co">#save(pop.lin, file=&#39;pop.lin&#39;)</span></span>
+<span id="cb16-5"><a href="#cb16-5" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;pop.lin&#39;</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" tabindex="-1"></a>gamma10lin <span class="ot">&lt;-</span> <span class="fu">coef</span>(pop.lin)[<span class="dv">2</span>]</span>
+<span id="cb16-7"><a href="#cb16-7" tabindex="-1"></a>gamma10lin</span></code></pre></div>
 <pre><code>##         x 
 ## 0.2005706</code></pre>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a>b2lin <span class="ot">&lt;-</span> <span class="fu">coef</span>(pop.lin)[<span class="dv">3</span>]</span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>b2lin</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a>gamma01lin <span class="ot">&lt;-</span> <span class="fu">coef</span>(pop.lin)[<span class="dv">3</span>]</span>
+<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>gamma01lin</span></code></pre></div>
 <pre><code>##         w 
 ## 0.1643755</code></pre>
 <p><br></p>
@@ -860,21 +879,21 @@ class="math inline">\(k=15\)</span> clusters in the population data</p>
 data.tables each sampling <span class="math inline">\(n=9,108\)</span>
 clusters from the populations data.table. We will then run regression
 models across all 1,000 samples.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a>nsamp <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
-<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>nclus <span class="ot">&lt;-</span> <span class="dv">9108</span></span>
-<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a> </span>
-<span id="cb17-4"><a href="#cb17-4" tabindex="-1"></a> clussampler <span class="ot">&lt;-</span> <span class="cf">function</span>(data, clusid, nclus, nsamp){</span>
-<span id="cb17-5"><a href="#cb17-5" tabindex="-1"></a>   dtsamp <span class="ot">&lt;-</span> data[<span class="fu">sample</span>(<span class="fu">unique</span>(clusid), nclus), .SD ]</span>
-<span id="cb17-6"><a href="#cb17-6" tabindex="-1"></a> }</span>
-<span id="cb17-7"><a href="#cb17-7" tabindex="-1"></a><span class="co"># </span></span>
-<span id="cb17-8"><a href="#cb17-8" tabindex="-1"></a><span class="co"># set.seed(131416)</span></span>
-<span id="cb17-9"><a href="#cb17-9" tabindex="-1"></a><span class="co"># samplelist &lt;- list()</span></span>
-<span id="cb17-10"><a href="#cb17-10" tabindex="-1"></a><span class="co">#  for(i in 1:nsamp){</span></span>
-<span id="cb17-11"><a href="#cb17-11" tabindex="-1"></a><span class="co">#    sampled &lt;- clussampler(dt, clusid, nclus, nsamp)</span></span>
-<span id="cb17-12"><a href="#cb17-12" tabindex="-1"></a><span class="co">#    samplelist[[i]] &lt;- sampled</span></span>
-<span id="cb17-13"><a href="#cb17-13" tabindex="-1"></a><span class="co">#  }</span></span>
-<span id="cb17-14"><a href="#cb17-14" tabindex="-1"></a><span class="co"># save(samplelist, file=&#39;samplelist.RData&#39;)</span></span>
-<span id="cb17-15"><a href="#cb17-15" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;samplelist.RData&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>nsamp <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>nclus <span class="ot">&lt;-</span> <span class="dv">9108</span></span>
+<span id="cb20-3"><a href="#cb20-3" tabindex="-1"></a> </span>
+<span id="cb20-4"><a href="#cb20-4" tabindex="-1"></a> clussampler <span class="ot">&lt;-</span> <span class="cf">function</span>(data, clusid, nclus, nsamp){</span>
+<span id="cb20-5"><a href="#cb20-5" tabindex="-1"></a>   dtsamp <span class="ot">&lt;-</span> data[<span class="fu">sample</span>(<span class="fu">unique</span>(clusid), nclus), .SD ]</span>
+<span id="cb20-6"><a href="#cb20-6" tabindex="-1"></a> }</span>
+<span id="cb20-7"><a href="#cb20-7" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb20-8"><a href="#cb20-8" tabindex="-1"></a><span class="co"># set.seed(131416)</span></span>
+<span id="cb20-9"><a href="#cb20-9" tabindex="-1"></a><span class="co"># samplelist &lt;- list()</span></span>
+<span id="cb20-10"><a href="#cb20-10" tabindex="-1"></a><span class="co">#  for(i in 1:nsamp){</span></span>
+<span id="cb20-11"><a href="#cb20-11" tabindex="-1"></a><span class="co">#    sampled &lt;- clussampler(dt, clusid, nclus, nsamp)</span></span>
+<span id="cb20-12"><a href="#cb20-12" tabindex="-1"></a><span class="co">#    samplelist[[i]] &lt;- sampled</span></span>
+<span id="cb20-13"><a href="#cb20-13" tabindex="-1"></a><span class="co">#  }</span></span>
+<span id="cb20-14"><a href="#cb20-14" tabindex="-1"></a><span class="co"># save(samplelist, file=&#39;samplelist.RData&#39;)</span></span>
+<span id="cb20-15"><a href="#cb20-15" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;samplelist.RData&#39;</span>)</span></code></pre></div>
 <p><br></p>
 </div>
 <div id="run-linear-models" class="section level2">
@@ -890,85 +909,86 @@ SEs</li>
 <li>Look at the converage rate for 95% CIs using standard regression and
 robust regression</li>
 <li>Using standard regression, coverage rate is poor for the level-2
-predictor (<em>w</em>) effect but fine for the level-1 predictor
-(<em>x</em>) effect</li>
+predictor (<em>w</em>; <span class="math inline">\(\gamma_{01}\)</span>)
+effect but fine for the level-1 predictor (<em>x</em>; <span
+class="math inline">\(\gamma_{10}\)</span>) effect</li>
 <li>Using robust regression, coverage rate is good for all parameter
 estimates</li>
 </ul>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">131417</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" tabindex="-1"></a>linout <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb18-3"><a href="#cb18-3" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nsamp){</span>
-<span id="cb18-4"><a href="#cb18-4" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x <span class="sc">+</span> w, <span class="at">data =</span> samplelist[[i]])</span>
-<span id="cb18-5"><a href="#cb18-5" tabindex="-1"></a>  outdt <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">confint</span>(out))</span>
-<span id="cb18-6"><a href="#cb18-6" tabindex="-1"></a>  linout[[i]] <span class="ot">&lt;-</span> outdt</span>
-<span id="cb18-7"><a href="#cb18-7" tabindex="-1"></a>}</span>
-<span id="cb18-8"><a href="#cb18-8" tabindex="-1"></a></span>
-<span id="cb18-9"><a href="#cb18-9" tabindex="-1"></a>linest <span class="ot">=</span> <span class="fu">do.call</span>(rbind, linout)</span>
-<span id="cb18-10"><a href="#cb18-10" tabindex="-1"></a>linest<span class="sc">$</span>par <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;int&#39;</span>,<span class="st">&#39;b1&#39;</span>,<span class="st">&#39;b2&#39;</span>), nsamp))</span>
-<span id="cb18-11"><a href="#cb18-11" tabindex="-1"></a><span class="fu">setnames</span>(linest, <span class="at">old =</span> <span class="fu">names</span>(linest), <span class="at">new =</span> <span class="fu">c</span>(<span class="st">&#39;lci&#39;</span>,<span class="st">&#39;uci&#39;</span>,<span class="st">&#39;par&#39;</span>))</span>
-<span id="cb18-12"><a href="#cb18-12" tabindex="-1"></a>linest[, b1 <span class="sc">:=</span> b1lin]</span>
-<span id="cb18-13"><a href="#cb18-13" tabindex="-1"></a>linest[, b2 <span class="sc">:=</span> b2lin]</span>
-<span id="cb18-14"><a href="#cb18-14" tabindex="-1"></a></span>
-<span id="cb18-15"><a href="#cb18-15" tabindex="-1"></a>linest[par<span class="sc">==</span><span class="st">&#39;b1&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(b1, lci, uci))]</span>
-<span id="cb18-16"><a href="#cb18-16" tabindex="-1"></a>linest[par<span class="sc">==</span><span class="st">&#39;b2&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(b2, lci, uci))]</span>
-<span id="cb18-17"><a href="#cb18-17" tabindex="-1"></a>linest <span class="ot">&lt;-</span> linest[par<span class="sc">!=</span><span class="st">&#39;int&#39;</span>,]</span>
-<span id="cb18-18"><a href="#cb18-18" tabindex="-1"></a></span>
-<span id="cb18-19"><a href="#cb18-19" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">131418</span>)</span>
-<span id="cb18-20"><a href="#cb18-20" tabindex="-1"></a>linrobout <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb18-21"><a href="#cb18-21" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nsamp){</span>
-<span id="cb18-22"><a href="#cb18-22" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">lm_robust</span>(y <span class="sc">~</span> x <span class="sc">+</span> w, <span class="at">data =</span> samplelist[[i]], <span class="at">se_type =</span> <span class="st">&quot;stata&quot;</span>, <span class="at">clusters =</span> clusid)</span>
-<span id="cb18-23"><a href="#cb18-23" tabindex="-1"></a>  outdt <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">confint</span>(out))</span>
-<span id="cb18-24"><a href="#cb18-24" tabindex="-1"></a>  linrobout[[i]] <span class="ot">&lt;-</span> outdt</span>
-<span id="cb18-25"><a href="#cb18-25" tabindex="-1"></a>}</span>
-<span id="cb18-26"><a href="#cb18-26" tabindex="-1"></a></span>
-<span id="cb18-27"><a href="#cb18-27" tabindex="-1"></a>linrobest <span class="ot">=</span> <span class="fu">do.call</span>(rbind, linrobout)</span>
-<span id="cb18-28"><a href="#cb18-28" tabindex="-1"></a>linrobest<span class="sc">$</span>par <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;int&#39;</span>,<span class="st">&#39;b1&#39;</span>,<span class="st">&#39;b2&#39;</span>), nsamp))</span>
-<span id="cb18-29"><a href="#cb18-29" tabindex="-1"></a><span class="fu">setnames</span>(linrobest, <span class="at">old =</span> <span class="fu">names</span>(linrobest), <span class="at">new =</span> <span class="fu">c</span>(<span class="st">&#39;lci&#39;</span>,<span class="st">&#39;uci&#39;</span>,<span class="st">&#39;par&#39;</span>))</span>
-<span id="cb18-30"><a href="#cb18-30" tabindex="-1"></a>linrobest[, b1 <span class="sc">:=</span> b1lin]</span>
-<span id="cb18-31"><a href="#cb18-31" tabindex="-1"></a>linrobest[, b2 <span class="sc">:=</span> b2lin]</span>
-<span id="cb18-32"><a href="#cb18-32" tabindex="-1"></a></span>
-<span id="cb18-33"><a href="#cb18-33" tabindex="-1"></a>linrobest[par<span class="sc">==</span><span class="st">&#39;b1&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(b1, lci, uci))]</span>
-<span id="cb18-34"><a href="#cb18-34" tabindex="-1"></a>linrobest[par<span class="sc">==</span><span class="st">&#39;b2&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(b2, lci, uci))]</span>
-<span id="cb18-35"><a href="#cb18-35" tabindex="-1"></a>linrobest <span class="ot">&lt;-</span> linrobest[par<span class="sc">!=</span><span class="st">&#39;int&#39;</span>,]</span>
-<span id="cb18-36"><a href="#cb18-36" tabindex="-1"></a></span>
-<span id="cb18-37"><a href="#cb18-37" tabindex="-1"></a></span>
-<span id="cb18-38"><a href="#cb18-38" tabindex="-1"></a>linestboth <span class="ot">&lt;-</span> <span class="fu">rbind</span>(linest, linrobest)</span>
-<span id="cb18-39"><a href="#cb18-39" tabindex="-1"></a>linestboth<span class="sc">$</span>model <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;Standard&#39;</span>,<span class="st">&#39;Robust&#39;</span>), <span class="at">each=</span><span class="dv">2000</span>))</span>
-<span id="cb18-40"><a href="#cb18-40" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>cover) <span class="ot">&lt;-</span> <span class="st">&#39;Does CI cover true parameter?&#39;</span></span>
-<span id="cb18-41"><a href="#cb18-41" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>model) <span class="ot">&lt;-</span> <span class="st">&#39;Model SE estimation type&#39;</span></span>
-<span id="cb18-42"><a href="#cb18-42" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>par) <span class="ot">&lt;-</span> <span class="st">&#39;Parameter&#39;</span></span>
-<span id="cb18-43"><a href="#cb18-43" tabindex="-1"></a></span>
-<span id="cb18-44"><a href="#cb18-44" tabindex="-1"></a><span class="fu">html</span>(<span class="fu">summaryM</span>(cover <span class="sc">~</span> par<span class="sc">+</span>model, <span class="at">data=</span>linestboth))</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">131417</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>linout <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nsamp){</span>
+<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> x <span class="sc">+</span> w, <span class="at">data =</span> samplelist[[i]])</span>
+<span id="cb21-5"><a href="#cb21-5" tabindex="-1"></a>  outdt <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">confint</span>(out))</span>
+<span id="cb21-6"><a href="#cb21-6" tabindex="-1"></a>  linout[[i]] <span class="ot">&lt;-</span> outdt</span>
+<span id="cb21-7"><a href="#cb21-7" tabindex="-1"></a>}</span>
+<span id="cb21-8"><a href="#cb21-8" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" tabindex="-1"></a>linest <span class="ot">=</span> <span class="fu">do.call</span>(rbind, linout)</span>
+<span id="cb21-10"><a href="#cb21-10" tabindex="-1"></a>linest<span class="sc">$</span>par <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;int&#39;</span>,<span class="st">&#39;gamma10&#39;</span>,<span class="st">&#39;gamma01&#39;</span>), nsamp))</span>
+<span id="cb21-11"><a href="#cb21-11" tabindex="-1"></a><span class="fu">setnames</span>(linest, <span class="at">old =</span> <span class="fu">names</span>(linest), <span class="at">new =</span> <span class="fu">c</span>(<span class="st">&#39;lci&#39;</span>,<span class="st">&#39;uci&#39;</span>,<span class="st">&#39;par&#39;</span>))</span>
+<span id="cb21-12"><a href="#cb21-12" tabindex="-1"></a>linest[, gamma10 <span class="sc">:=</span> gamma10lin]</span>
+<span id="cb21-13"><a href="#cb21-13" tabindex="-1"></a>linest[, gamma01 <span class="sc">:=</span> gamma01lin]</span>
+<span id="cb21-14"><a href="#cb21-14" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" tabindex="-1"></a>linest[par<span class="sc">==</span><span class="st">&#39;gamma10&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(gamma10, lci, uci))]</span>
+<span id="cb21-16"><a href="#cb21-16" tabindex="-1"></a>linest[par<span class="sc">==</span><span class="st">&#39;gamma01&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(gamma01, lci, uci))]</span>
+<span id="cb21-17"><a href="#cb21-17" tabindex="-1"></a>linest <span class="ot">&lt;-</span> linest[par<span class="sc">!=</span><span class="st">&#39;int&#39;</span>,]</span>
+<span id="cb21-18"><a href="#cb21-18" tabindex="-1"></a></span>
+<span id="cb21-19"><a href="#cb21-19" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">131418</span>)</span>
+<span id="cb21-20"><a href="#cb21-20" tabindex="-1"></a>linrobout <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb21-21"><a href="#cb21-21" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>nsamp){</span>
+<span id="cb21-22"><a href="#cb21-22" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">lm_robust</span>(y <span class="sc">~</span> x <span class="sc">+</span> w, <span class="at">data =</span> samplelist[[i]], <span class="at">se_type =</span> <span class="st">&quot;stata&quot;</span>, <span class="at">clusters =</span> clusid)</span>
+<span id="cb21-23"><a href="#cb21-23" tabindex="-1"></a>  outdt <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">confint</span>(out))</span>
+<span id="cb21-24"><a href="#cb21-24" tabindex="-1"></a>  linrobout[[i]] <span class="ot">&lt;-</span> outdt</span>
+<span id="cb21-25"><a href="#cb21-25" tabindex="-1"></a>}</span>
+<span id="cb21-26"><a href="#cb21-26" tabindex="-1"></a></span>
+<span id="cb21-27"><a href="#cb21-27" tabindex="-1"></a>linrobest <span class="ot">=</span> <span class="fu">do.call</span>(rbind, linrobout)</span>
+<span id="cb21-28"><a href="#cb21-28" tabindex="-1"></a>linrobest<span class="sc">$</span>par <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;int&#39;</span>,<span class="st">&#39;gamma10&#39;</span>,<span class="st">&#39;gamma01&#39;</span>), nsamp))</span>
+<span id="cb21-29"><a href="#cb21-29" tabindex="-1"></a><span class="fu">setnames</span>(linrobest, <span class="at">old =</span> <span class="fu">names</span>(linrobest), <span class="at">new =</span> <span class="fu">c</span>(<span class="st">&#39;lci&#39;</span>,<span class="st">&#39;uci&#39;</span>,<span class="st">&#39;par&#39;</span>))</span>
+<span id="cb21-30"><a href="#cb21-30" tabindex="-1"></a>linrobest[, gamma10 <span class="sc">:=</span> gamma10lin]</span>
+<span id="cb21-31"><a href="#cb21-31" tabindex="-1"></a>linrobest[, gamma01 <span class="sc">:=</span> gamma01lin]</span>
+<span id="cb21-32"><a href="#cb21-32" tabindex="-1"></a></span>
+<span id="cb21-33"><a href="#cb21-33" tabindex="-1"></a>linrobest[par<span class="sc">==</span><span class="st">&#39;gamma10&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(gamma10, lci, uci))]</span>
+<span id="cb21-34"><a href="#cb21-34" tabindex="-1"></a>linrobest[par<span class="sc">==</span><span class="st">&#39;gamma01&#39;</span>, cover <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">between</span>(gamma01, lci, uci))]</span>
+<span id="cb21-35"><a href="#cb21-35" tabindex="-1"></a>linrobest <span class="ot">&lt;-</span> linrobest[par<span class="sc">!=</span><span class="st">&#39;int&#39;</span>,]</span>
+<span id="cb21-36"><a href="#cb21-36" tabindex="-1"></a></span>
+<span id="cb21-37"><a href="#cb21-37" tabindex="-1"></a></span>
+<span id="cb21-38"><a href="#cb21-38" tabindex="-1"></a>linestboth <span class="ot">&lt;-</span> <span class="fu">rbind</span>(linest, linrobest)</span>
+<span id="cb21-39"><a href="#cb21-39" tabindex="-1"></a>linestboth<span class="sc">$</span>model <span class="ot">&lt;-</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&#39;Standard&#39;</span>,<span class="st">&#39;Robust&#39;</span>), <span class="at">each=</span><span class="dv">2000</span>))</span>
+<span id="cb21-40"><a href="#cb21-40" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>cover) <span class="ot">&lt;-</span> <span class="st">&#39;Does CI cover true parameter?&#39;</span></span>
+<span id="cb21-41"><a href="#cb21-41" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>model) <span class="ot">&lt;-</span> <span class="st">&#39;Model SE estimation type&#39;</span></span>
+<span id="cb21-42"><a href="#cb21-42" tabindex="-1"></a><span class="fu">label</span>(linestboth<span class="sc">$</span>par) <span class="ot">&lt;-</span> <span class="st">&#39;Parameter&#39;</span></span>
+<span id="cb21-43"><a href="#cb21-43" tabindex="-1"></a></span>
+<span id="cb21-44"><a href="#cb21-44" tabindex="-1"></a><span class="fu">html</span>(<span class="fu">summaryM</span>(cover <span class="sc">~</span> par<span class="sc">+</span>model, <span class="at">data=</span>linestboth))</span></code></pre></div>
 <table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em;' >
 <thead>
 <tr><td colspan='3' style='text-align: left;'>
 Descriptive Statistics<i>  (N=2000)</i>.  </td></tr>
 <tr><th style='border-bottom: 1px solid grey; font-weight: 900; border-top: 2px solid grey; width:25ex; text-align: center;'></th>
-<th style='font-weight: 900; border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>b1<br><i>N=1000</i></th>
-<th style='font-weight: 900; border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>b2<br><i>N=1000</i></th>
+<th style='font-weight: 900; border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>gamma01<br><i>N=1000</i></th>
+<th style='font-weight: 900; border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>gamma10<br><i>N=1000</i></th>
 </tr>
 </thead>
 <tbody>
 <tr><td colspan='3' style='width:25ex; font-weight: 900; text-align: left;'>Robust</td></tr>
 <tr>
 <td style='width:25ex; text-align: left;'>Does CI cover true parameter?</td>
-<td style='padding: 0 7px 0 7px; text-align: center;'>0.96 <span style="font-size: 80%;"> (960)</span></td>
 <td style='padding: 0 7px 0 7px; text-align: center;'>0.96 <span style="font-size: 80%;"> (965)</span></td>
+<td style='padding: 0 7px 0 7px; text-align: center;'>0.96 <span style="font-size: 80%;"> (960)</span></td>
 </tr>
 <tr><td colspan='3' style='width:25ex; font-weight: 900; text-align: left; border-top: 1px solid #BEBEBE;'>Standard</td></tr>
 <tr>
 <td style='width:25ex; border-bottom: 2px solid grey; text-align: left;'>Does CI cover true parameter?</td>
-<td style='padding: 0 7px 0 7px; border-bottom: 2px solid grey; text-align: center;'>0.96 <span style="font-size: 80%;"> (961)</span></td>
 <td style='padding: 0 7px 0 7px; border-bottom: 2px solid grey; text-align: center;'>0.86 <span style="font-size: 80%;"> (859)</span></td>
+<td style='padding: 0 7px 0 7px; border-bottom: 2px solid grey; text-align: center;'>0.96 <span style="font-size: 80%;"> (961)</span></td>
 </tr>
 </tbody>
 <tfoot><tr><td colspan='3'>
 Numbers after proportions are frequencies.</td></tr></tfoot>
 </table>
-<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="fu">save</span>(linest, <span class="at">file=</span><span class="st">&#39;linest.RData&#39;</span>)</span>
-<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a><span class="fu">save</span>(linest, <span class="at">file=</span><span class="st">&#39;linrobest.RData&#39;</span>)</span>
-<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;linest.RData&#39;</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;linrobest.RData&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">save</span>(linest, <span class="at">file=</span><span class="st">&#39;linest.RData&#39;</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" tabindex="-1"></a><span class="fu">save</span>(linest, <span class="at">file=</span><span class="st">&#39;linrobest.RData&#39;</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;linest.RData&#39;</span>)</span>
+<span id="cb22-4"><a href="#cb22-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;linrobest.RData&#39;</span>)</span></code></pre></div>
 <p><br> <br></p>
 </div>
 </div>
@@ -988,8 +1008,8 @@ class="math inline">\(N=32,428\)</span> observations)</li>
 1=present with 80% of responses assigned to the reference category
 (“Absent”)</li>
 </ul>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" tabindex="-1"></a>dt1 <span class="ot">&lt;-</span> samplelist[[<span class="dv">1</span>]]</span>
-<span id="cb20-2"><a href="#cb20-2" tabindex="-1"></a>dt1[, wf <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(w <span class="sc">&gt;</span> <span class="fu">quantile</span>(w, <span class="fl">0.8</span>), <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">levels=</span><span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">labels=</span><span class="fu">c</span>(<span class="st">&#39;Absent&#39;</span>,<span class="st">&#39;Present&#39;</span>))]</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>dt1 <span class="ot">&lt;-</span> samplelist[[<span class="dv">1</span>]]</span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>dt1[, wf <span class="sc">:=</span> <span class="fu">factor</span>(<span class="fu">ifelse</span>(w <span class="sc">&gt;</span> <span class="fu">quantile</span>(w, <span class="fl">0.8</span>), <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">levels=</span><span class="dv">0</span><span class="sc">:</span><span class="dv">1</span>, <span class="at">labels=</span><span class="fu">c</span>(<span class="st">&#39;Absent&#39;</span>,<span class="st">&#39;Present&#39;</span>))]</span></code></pre></div>
 <p><br> <br></p>
 </div>
 <div id="ordinal-logistic-regression" class="section level2">
@@ -1009,10 +1029,10 @@ clustering</li>
 <li>Confidence intervals are calculated using profile likelihood
 method</li>
 </ul>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a>ord1 <span class="ot">&lt;-</span> <span class="fu">polr</span>(<span class="fu">factor</span>(y.ord) <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">data =</span> dt1, <span class="at">Hess =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb21-2"><a href="#cb21-2" tabindex="-1"></a>ord1.or <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">exp</span>(<span class="fu">coef</span>(ord1)))</span>
-<span id="cb21-3"><a href="#cb21-3" tabindex="-1"></a>ord1ci <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">exp</span>(<span class="fu">confint</span>(ord1)))</span>
-<span id="cb21-4"><a href="#cb21-4" tabindex="-1"></a><span class="fu">data.table</span>(<span class="at">Predictor=</span><span class="fu">c</span>(<span class="st">&#39;x&#39;</span>,<span class="st">&#39;wf&#39;</span>,<span class="st">&#39;x:wf&#39;</span>), <span class="st">&quot;Odds Ratio&quot;</span><span class="ot">=</span>ord1.or, ord1ci)</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" tabindex="-1"></a>ord1 <span class="ot">&lt;-</span> <span class="fu">polr</span>(<span class="fu">factor</span>(y.ord) <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">data =</span> dt1, <span class="at">Hess =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" tabindex="-1"></a>ord1.or <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">exp</span>(<span class="fu">coef</span>(ord1)))</span>
+<span id="cb24-3"><a href="#cb24-3" tabindex="-1"></a>ord1ci <span class="ot">&lt;-</span> <span class="fu">data.table</span>(<span class="fu">exp</span>(<span class="fu">confint</span>(ord1)))</span>
+<span id="cb24-4"><a href="#cb24-4" tabindex="-1"></a><span class="fu">data.table</span>(<span class="at">Predictor=</span><span class="fu">c</span>(<span class="st">&#39;x&#39;</span>,<span class="st">&#39;wf&#39;</span>,<span class="st">&#39;x:wf&#39;</span>), <span class="st">&quot;Odds Ratio&quot;</span><span class="ot">=</span>ord1.or, ord1ci)</span></code></pre></div>
 <pre><code>##    Predictor Odds Ratio.V1     2.5 %   97.5 %
 ##       &lt;char&gt;         &lt;num&gt;     &lt;num&gt;    &lt;num&gt;
 ## 1:         x      1.305339 1.2632215 1.348965
@@ -1030,10 +1050,10 @@ function <em>vcovCL()</em></li>
 <li>Confidence intervals are mildly wider when using robust standard
 errors, particularly for the <em>wf</em> level-2 predictor</li>
 </ul>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a>ord1coef.rob <span class="ot">&lt;-</span> <span class="fu">coeftest</span>(ord1, <span class="at">vcov=</span><span class="fu">vcovCL</span>(ord1, <span class="fu">factor</span>(dt1<span class="sc">$</span>clusid) ))</span>
-<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>ord1or.rob <span class="ot">&lt;-</span> <span class="fu">exp</span>(ord1coef.rob)</span>
-<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a>ord1or.rob.ci <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">confint</span>(ord1coef.rob))</span>
-<span id="cb23-4"><a href="#cb23-4" tabindex="-1"></a><span class="fu">data.table</span>(<span class="at">Predictor=</span><span class="fu">c</span>(<span class="st">&#39;x&#39;</span>,<span class="st">&#39;wf&#39;</span>,<span class="st">&#39;x:wf&#39;</span>), <span class="st">&quot;Odds Ratio&quot;</span><span class="ot">=</span> ord1or.rob[,<span class="dv">1</span>], ord1or.rob.ci)</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a>ord1coef.rob <span class="ot">&lt;-</span> <span class="fu">coeftest</span>(ord1, <span class="at">vcov=</span><span class="fu">vcovCL</span>(ord1, <span class="fu">factor</span>(dt1<span class="sc">$</span>clusid) ))</span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>ord1or.rob <span class="ot">&lt;-</span> <span class="fu">exp</span>(ord1coef.rob)</span>
+<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a>ord1or.rob.ci <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="fu">confint</span>(ord1coef.rob))</span>
+<span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a><span class="fu">data.table</span>(<span class="at">Predictor=</span><span class="fu">c</span>(<span class="st">&#39;x&#39;</span>,<span class="st">&#39;wf&#39;</span>,<span class="st">&#39;x:wf&#39;</span>), <span class="st">&quot;Odds Ratio&quot;</span><span class="ot">=</span> ord1or.rob[,<span class="dv">1</span>], ord1or.rob.ci)</span></code></pre></div>
 <pre><code>##    Predictor Odds Ratio     2.5 %   97.5 %
 ##       &lt;char&gt;      &lt;num&gt;     &lt;num&gt;    &lt;num&gt;
 ## 1:         x   1.305339 1.2627791 1.349333
@@ -1054,8 +1074,8 @@ of violation of the proportional odds assumption.</p>
 <li>Will be helpful later for plotting and testing proportional odds
 assumption</li>
 </ul>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a>dd <span class="ot">&lt;-</span> <span class="fu">datadist</span>(dt1)</span>
-<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="fu">options</span>(<span class="at">datadist=</span>dd)</span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a>dd <span class="ot">&lt;-</span> <span class="fu">datadist</span>(dt1)</span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a><span class="fu">options</span>(<span class="at">datadist=</span>dd)</span></code></pre></div>
 <p><br></p>
 <ul>
 <li>Fit the same proportional odds regression model previously fit with
@@ -1066,9 +1086,9 @@ function after fitting the model</li>
 as those obtained with <em>polr()</em> in conjunction with the
 <strong>sandwich</strong> package</li>
 </ul>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a>lrm1 <span class="ot">&lt;-</span> <span class="fu">lrm</span>(y.ord <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">data =</span> dt1, <span class="at">x=</span>T, <span class="at">y=</span>T)</span>
-<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>lrm1rob <span class="ot">&lt;-</span> <span class="fu">robcov</span>(lrm1, <span class="at">cluster=</span>dt1<span class="sc">$</span>clusid)</span>
-<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="fu">summary</span>(lrm1rob, <span class="at">x=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>))</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a>lrm1 <span class="ot">&lt;-</span> <span class="fu">lrm</span>(y.ord <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">data =</span> dt1, <span class="at">x=</span>T, <span class="at">y=</span>T)</span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>lrm1rob <span class="ot">&lt;-</span> <span class="fu">robcov</span>(lrm1, <span class="at">cluster=</span>dt1<span class="sc">$</span>clusid)</span>
+<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a><span class="fu">summary</span>(lrm1rob, <span class="at">x=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>))</span></code></pre></div>
 <pre><code>##              Effects              Response : y.ord 
 ## 
 ##  Factor              Low High Diff. Effect  S.E.     Lower 0.95 Upper 0.95
@@ -1080,7 +1100,7 @@ as those obtained with <em>polr()</em> in conjunction with the
 ## Adjusted to: x=0.001257004 wf=Absent</code></pre>
 <p><br></p>
 <p>Plot the conditional odds ratios for the two predictors</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">summary</span>(lrm1rob, wf, <span class="at">x=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>)))</span></code></pre></div>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">summary</span>(lrm1rob, wf, <span class="at">x=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>)))</span></code></pre></div>
 <p><img src="index_files/figure-html/lrm1orplot-1.png" width="672" />
 <br></p>
 <ul>
@@ -1089,20 +1109,20 @@ the ordinal outcome</li>
 <li>Prediction across all values of <em>x</em> by levels of
 <em>wf</em></li>
 </ul>
-<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">Predict</span>(lrm1, x, wf, <span class="at">kint =</span> <span class="dv">1</span>, <span class="at">fun =</span> plogis)) <span class="sc">+</span></span>
-<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">&#39;Levels of Level-1 Predictor (x)&#39;</span>,</span>
-<span id="cb29-3"><a href="#cb29-3" tabindex="-1"></a>       <span class="at">y=</span><span class="st">&#39;Predicted Probability&#39;</span>,</span>
-<span id="cb29-4"><a href="#cb29-4" tabindex="-1"></a>       <span class="at">title=</span><span class="st">&#39;Model-Predicted Probability of Being in the &quot;Medium&quot; Outcome Category&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">Predict</span>(lrm1, x, wf, <span class="at">kint =</span> <span class="dv">1</span>, <span class="at">fun =</span> plogis)) <span class="sc">+</span></span>
+<span id="cb32-2"><a href="#cb32-2" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">&#39;Levels of Level-1 Predictor (x)&#39;</span>,</span>
+<span id="cb32-3"><a href="#cb32-3" tabindex="-1"></a>       <span class="at">y=</span><span class="st">&#39;Predicted Probability&#39;</span>,</span>
+<span id="cb32-4"><a href="#cb32-4" tabindex="-1"></a>       <span class="at">title=</span><span class="st">&#39;Model-Predicted Probability of Being in the &quot;Medium&quot; Outcome Category&#39;</span>)</span></code></pre></div>
 <p><img src="index_files/figure-html/lrm1predplot-1.png" width="672" /></p>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">Predict</span>(lrm1, x, wf, <span class="at">kint =</span> <span class="dv">2</span>, <span class="at">fun =</span> plogis)) <span class="sc">+</span></span>
-<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">&#39;Levels of Level-1 Predictor (x)&#39;</span>,</span>
-<span id="cb30-3"><a href="#cb30-3" tabindex="-1"></a>       <span class="at">y=</span><span class="st">&#39;Predicted Probability&#39;</span>,</span>
-<span id="cb30-4"><a href="#cb30-4" tabindex="-1"></a>       <span class="at">title=</span><span class="st">&#39;Model-Predicted Probability of Being in the &quot;High&quot; Outcome Category&#39;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="fu">Predict</span>(lrm1, x, wf, <span class="at">kint =</span> <span class="dv">2</span>, <span class="at">fun =</span> plogis)) <span class="sc">+</span></span>
+<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">&#39;Levels of Level-1 Predictor (x)&#39;</span>,</span>
+<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a>       <span class="at">y=</span><span class="st">&#39;Predicted Probability&#39;</span>,</span>
+<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a>       <span class="at">title=</span><span class="st">&#39;Model-Predicted Probability of Being in the &quot;High&quot; Outcome Category&#39;</span>)</span></code></pre></div>
 <p><img src="index_files/figure-html/lrm1predplot-2.png" width="672" /></p>
 <p><br></p>
 </div>
-<div id="evaluate-proportional-odds-assumption" class="section level3">
-<h3>Evaluate Proportional Odds Assumption</h3>
+<div id="proportional-odds-assumption" class="section level3">
+<h3>Proportional Odds Assumption</h3>
 <p>In this section, we use <a
 href="https://www.fharrell.com/post/impactpo/">procedures</a> described
 by Harrell to evaluate the impact of potential proportional odds (PO)
@@ -1128,11 +1148,11 @@ and <em>wf</em></li>
 <li>Note, might make sense to use more values of <em>x</em> but just
 using 3 here for demonstration purposes</li>
 </ul>
-<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">x=</span><span class="fu">c</span>(<span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.25</span>),</span>
-<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a>                        <span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.5</span>),</span>
-<span id="cb31-3"><a href="#cb31-3" tabindex="-1"></a>                        <span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.75</span>)),</span>
-<span id="cb31-4"><a href="#cb31-4" tabindex="-1"></a>                    <span class="at">wf=</span><span class="fu">levels</span>(dt1<span class="sc">$</span>wf))</span>
-<span id="cb31-5"><a href="#cb31-5" tabindex="-1"></a>pred</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">x=</span><span class="fu">c</span>(<span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.25</span>),</span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a>                        <span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.5</span>),</span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a>                        <span class="fu">quantile</span>(dt1<span class="sc">$</span>x, <span class="fl">0.75</span>)),</span>
+<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a>                    <span class="at">wf=</span><span class="fu">levels</span>(dt1<span class="sc">$</span>wf))</span>
+<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a>pred</span></code></pre></div>
 <pre><code>##              x      wf
 ## 1 -0.667903374  Absent
 ## 2  0.001257004  Absent
@@ -1151,11 +1171,11 @@ intervals for difference in predicted values across the 3 different
 logistic models – sig differences would be indicative of violation of
 proportional odds assumption</li>
 </ul>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="co"># poimp &lt;- impactPO(y.ord ~ x*wf, nonpo = ~ wf,</span></span>
-<span id="cb33-2"><a href="#cb33-2" tabindex="-1"></a><span class="co">#               data=dt1, newdata=pred, B=500)</span></span>
-<span id="cb33-3"><a href="#cb33-3" tabindex="-1"></a><span class="co"># save(poimp, file=&#39;poimp.RData&#39;)</span></span>
-<span id="cb33-4"><a href="#cb33-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;poimp.RData&#39;</span>)</span>
-<span id="cb33-5"><a href="#cb33-5" tabindex="-1"></a>poimp</span></code></pre></div>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="co"># poimp &lt;- impactPO(y.ord ~ x*wf, nonpo = ~ wf,</span></span>
+<span id="cb36-2"><a href="#cb36-2" tabindex="-1"></a><span class="co">#               data=dt1, newdata=pred, B=500)</span></span>
+<span id="cb36-3"><a href="#cb36-3" tabindex="-1"></a><span class="co"># save(poimp, file=&#39;poimp.RData&#39;)</span></span>
+<span id="cb36-4"><a href="#cb36-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;poimp.RData&#39;</span>)</span>
+<span id="cb36-5"><a href="#cb36-5" tabindex="-1"></a>poimp</span></code></pre></div>
 <pre><code>##                           PO       PPO      Multinomial
 ## Deviance                  37350.30 37348.10 37342.35   
 ## d.f.                      5        6        8          
@@ -1310,11 +1330,11 @@ relaxing the PO assumption only for the effect of <em>x</em>.</li>
 <em>relax=‘ppo’</em> argument so that the function does not needlessly
 rerun the multinomial model</li>
 </ul>
-<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" tabindex="-1"></a><span class="co"># poimp1 &lt;- impactPO(y.ord ~ x*wf, nonpo = ~ x, relax = &#39;ppo&#39;,</span></span>
-<span id="cb35-2"><a href="#cb35-2" tabindex="-1"></a><span class="co">#               data=dt1, newdata=pred, B=500)</span></span>
-<span id="cb35-3"><a href="#cb35-3" tabindex="-1"></a><span class="co"># save(poimp1, file=&#39;poimp1.RData&#39;)</span></span>
-<span id="cb35-4"><a href="#cb35-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;poimp1.RData&#39;</span>)</span>
-<span id="cb35-5"><a href="#cb35-5" tabindex="-1"></a>poimp1</span></code></pre></div>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a><span class="co"># poimp1 &lt;- impactPO(y.ord ~ x*wf, nonpo = ~ x, relax = &#39;ppo&#39;,</span></span>
+<span id="cb38-2"><a href="#cb38-2" tabindex="-1"></a><span class="co">#               data=dt1, newdata=pred, B=500)</span></span>
+<span id="cb38-3"><a href="#cb38-3" tabindex="-1"></a><span class="co"># save(poimp1, file=&#39;poimp1.RData&#39;)</span></span>
+<span id="cb38-4"><a href="#cb38-4" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&#39;poimp1.RData&#39;</span>)</span>
+<span id="cb38-5"><a href="#cb38-5" tabindex="-1"></a>poimp1</span></code></pre></div>
 <pre><code>##                           PO       PPO     
 ## Deviance                  37350.30 37344.72
 ## d.f.                      5        6       
@@ -1427,8 +1447,8 @@ second thresholds is the same (PO assumption)</li>
 class="math inline">\(x*wf\)</span> interaction as we do NOT assume the
 effect is constant across thresholds of <em>y.ord</em></li>
 </ul>
-<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a>vglm1 <span class="ot">&lt;-</span> <span class="fu">vglm</span>(y.ord <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">family=</span><span class="fu">cumulative</span>(<span class="at">parallel=</span><span class="cn">FALSE</span><span class="sc">~</span>x<span class="sc">+</span>x<span class="sc">:</span>wf), <span class="at">data=</span>dt1)</span>
-<span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="fu">summary</span>(vglm1)</span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a>vglm1 <span class="ot">&lt;-</span> <span class="fu">vglm</span>(y.ord <span class="sc">~</span> x<span class="sc">*</span>wf, <span class="at">family=</span><span class="fu">cumulative</span>(<span class="at">parallel=</span><span class="cn">FALSE</span><span class="sc">~</span>x<span class="sc">+</span>x<span class="sc">:</span>wf), <span class="at">data=</span>dt1)</span>
+<span id="cb40-2"><a href="#cb40-2" tabindex="-1"></a><span class="fu">summary</span>(vglm1)</span></code></pre></div>
 <pre><code>## 
 ## Call:
 ## vglm(formula = y.ord ~ x * wf, family = cumulative(parallel = FALSE ~ 
